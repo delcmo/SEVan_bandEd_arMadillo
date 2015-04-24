@@ -22,20 +22,20 @@ EquationOfState::~EquationOfState()
   // Destructor, empty
 }
 
-Real EquationOfState::pressure(Real, RealVectorValue, Real) const
+Real EquationOfState::pressure(Real, Real, Real) const
 {
   this->error_not_implemented("pressure");
   return 0.;
 }
 
-Real EquationOfState::temperature(Real, RealVectorValue, Real) const
+Real EquationOfState::temperature(Real, Real, Real) const
 {
   this->error_not_implemented("temperature");
   return 0.;
 }
 
 Real
-EquationOfState::c2(Real, RealVectorValue, Real) const
+EquationOfState::c2(Real, Real, Real) const
 {
   this->error_not_implemented("c2");
   return 0.;

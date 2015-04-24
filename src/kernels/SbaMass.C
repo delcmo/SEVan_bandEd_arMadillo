@@ -43,7 +43,7 @@ Real SbaMass::computeQpResidual()
   Real conv_k = _alrhouA_x_k[_qp];
 
   // Return
-  return -conv_k*_grad_test[_j][_qp](0);
+  return -conv_k*_grad_test[_i][_qp](0);
 }
 
 Real SbaMass::computeQpJacobian()

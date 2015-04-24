@@ -101,7 +101,7 @@ Real SbaMomentum::computeQpResidual()
   Real gravity_term = _alrhoA_k[_qp]*_gravity(0);
 
   // Return
-  return -conv_k*_grad_test[_j][_qp](0) - (vel_rel_term+grad_term+gravity_term)*_test[_i][_qp];
+  return -conv_k*_grad_test[_i][_qp](0) - (vel_rel_term+grad_term+gravity_term)*_test[_i][_qp];
 }
 
 Real SbaMomentum::computeQpJacobian()

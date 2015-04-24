@@ -34,13 +34,13 @@ public:
   virtual void finalize() {};
 
   // The interface for derived EquationOfState objects to implement...
-  virtual Real pressure(Real rho, RealVectorValue vel, Real rhoE) const;
+  virtual Real pressure(Real rho, Real vel, Real rhoE) const;
 
   // The interface for derived EquationOfState objects to implement...
-  virtual Real temperature(Real rho, RealVectorValue vel, Real rhoE) const;
+  virtual Real temperature(Real rho, Real vel, Real rhoE) const;
 
   // Sound speed squared
-  virtual Real c2(Real rho, RealVectorValue vel, Real rhoE) const;
+  virtual Real c2(Real rho, Real vel, Real rhoE) const;
 
   // Computes density from pressure and temperature for single-phase
   virtual Real rho_from_p_T(Real pressure, Real temperature) const;
