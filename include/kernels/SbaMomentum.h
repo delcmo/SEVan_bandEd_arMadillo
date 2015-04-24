@@ -12,23 +12,23 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
-#ifndef SBAENERGY_H
-#define SBAENERGY_H
+#ifndef SBAMOMENTUM_H
+#define SBAMOMENTUM_H
 
 #include "Kernel.h"
 #include "EquationOfState.h"
 
 // Forward Declarations
-class SbaEnergy;
+class SbaMomentum;
 
 template<>
-InputParameters validParams<SbaEnergy>();
+InputParameters validParams<SbaMomentum>();
 
-class SbaEnergy : public Kernel
+class SbaMomentum : public Kernel
 {
 public:
 
-  SbaEnergy(const std::string & name,
+  SbaMomentum(const std::string & name,
              InputParameters parameters);
 
 protected:
@@ -48,10 +48,10 @@ private:
   // Coupled variables phase j
   VariableValue & _alrhoA_j;
   VariableValue & _alrhouA_x_j;
-  VariableValue & _alrhoEA_j;
     
   // Coupled aux variables:
   VariableValue & _area;
+  VariableGradient & _grad_area;
   VariableValue & _liquid_vf;
   VariableGradient & _grad_liquid_vf;
 
@@ -61,17 +61,12 @@ private:
 
   // Equation of state:
   const EquationOfState & _eos_k;
-  const EquationOfState & _eos_j;
     
   // Interfacial variables
   MaterialProperty<Real> & _PI;
-  MaterialProperty<Real> & _PI_bar;
-  MaterialProperty<Real> & _velI;
-  MaterialProperty<Real> & _velI_bar;
 
   // Relaxation parameters.
-  MaterialProperty<Real> & _P_rel;
   MaterialProperty<Real> & _vel_rel;
 };
 
-#endif // SBAENERGY_H
+#endif // SBAMOMENTUM_H

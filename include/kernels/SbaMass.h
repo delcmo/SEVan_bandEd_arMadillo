@@ -12,23 +12,22 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
-#ifndef SBAENERGY_H
-#define SBAENERGY_H
+#ifndef SBAMASS_H
+#define SBAMASS_H
 
 #include "Kernel.h"
-#include "EquationOfState.h"
 
 // Forward Declarations
-class SbaEnergy;
+class SbaMass;
 
 template<>
-InputParameters validParams<SbaEnergy>();
+InputParameters validParams<SbaMass>();
 
-class SbaEnergy : public Kernel
+class SbaMass : public Kernel
 {
 public:
 
-  SbaEnergy(const std::string & name,
+  SbaMass(const std::string & name,
              InputParameters parameters);
 
 protected:
@@ -41,37 +40,7 @@ protected:
 
 private:
   // Coupled variables phase k
-  VariableValue & _alrhoA_k;
   VariableValue & _alrhouA_x_k;
-  VariableValue & _alrhoEA_k;
-
-  // Coupled variables phase j
-  VariableValue & _alrhoA_j;
-  VariableValue & _alrhouA_x_j;
-  VariableValue & _alrhoEA_j;
-    
-  // Coupled aux variables:
-  VariableValue & _area;
-  VariableValue & _liquid_vf;
-  VariableGradient & _grad_liquid_vf;
-
-  // Parameters
-  bool _isLiquid;
-  RealVectorValue _gravity;
-
-  // Equation of state:
-  const EquationOfState & _eos_k;
-  const EquationOfState & _eos_j;
-    
-  // Interfacial variables
-  MaterialProperty<Real> & _PI;
-  MaterialProperty<Real> & _PI_bar;
-  MaterialProperty<Real> & _velI;
-  MaterialProperty<Real> & _velI_bar;
-
-  // Relaxation parameters.
-  MaterialProperty<Real> & _P_rel;
-  MaterialProperty<Real> & _vel_rel;
 };
 
-#endif // SBAENERGY_H
+#endif // SBAMASS_H

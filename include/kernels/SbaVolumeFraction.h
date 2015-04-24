@@ -12,23 +12,23 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
-#ifndef SBAENERGY_H
-#define SBAENERGY_H
+#ifndef SBAVOLUMEFRACTION_H
+#define SBAVOLUMEFRACTION_H
 
 #include "Kernel.h"
 #include "EquationOfState.h"
 
 // Forward Declarations
-class SbaEnergy;
+class SbaVolumeFraction;
 
 template<>
-InputParameters validParams<SbaEnergy>();
+InputParameters validParams<SbaVolumeFraction>();
 
-class SbaEnergy : public Kernel
+class SbaVolumeFraction : public Kernel
 {
 public:
 
-  SbaEnergy(const std::string & name,
+  SbaVolumeFraction(const std::string & name,
              InputParameters parameters);
 
 protected:
@@ -57,21 +57,16 @@ private:
 
   // Parameters
   bool _isLiquid;
-  RealVectorValue _gravity;
 
   // Equation of state:
   const EquationOfState & _eos_k;
   const EquationOfState & _eos_j;
-    
+
   // Interfacial variables
-  MaterialProperty<Real> & _PI;
-  MaterialProperty<Real> & _PI_bar;
   MaterialProperty<Real> & _velI;
-  MaterialProperty<Real> & _velI_bar;
 
   // Relaxation parameters.
   MaterialProperty<Real> & _P_rel;
-  MaterialProperty<Real> & _vel_rel;
 };
 
-#endif // SBAENERGY_H
+#endif // SBAVOLUMEFRACTION_H

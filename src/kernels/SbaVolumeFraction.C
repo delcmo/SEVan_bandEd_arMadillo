@@ -12,12 +12,12 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
-#include "SbaEnergy.h"
+#include "SbaVolumeFraction.h"
 /**
-This function computes the convection and source terms of the energy equation for phase k. The phase k is assumed to exchange energy with a phase denoted by the index j.
+This function computes the convection and source terms of the volume fraction equation for phase k. The phase k is assumed to exchange volume fraction with a phase denoted by the index j.
  **/
 template<>
-InputParameters validParams<SbaEnergy>()
+InputParameters validParams<SbaVolumeFraction>()
 {
   InputParameters params = validParams<Kernel>();
 
@@ -34,7 +34,6 @@ InputParameters validParams<SbaEnergy>()
   params.addRequiredCoupledVar("liquid_volume_fraction", "liquid volume fraction");
   // Parameters:
   params.addParam<bool>("isLiquid", true, "boolean to determine if liquid phase or not");
-  params.addParam<RealVectorValue>("gravity", (0., 0., 0.), "gravity vector");
   // Equation of states:
   params.addRequiredParam<UserObjectName>("eos_k", "Equation of state for phase k");
   params.addRequiredParam<UserObjectName>("eos_j", "Equation of state for phase j");
@@ -42,7 +41,7 @@ InputParameters validParams<SbaEnergy>()
   return params;
 }
 
-SbaEnergy::SbaEnergy(const std::string & name,
+SbaVolumeFraction::SbaVolumeFraction(const std::string & name,
                        InputParameters parameters) :
   Kernel(name, parameters),
     // Conservative variables for phase k:
@@ -59,24 +58,19 @@ SbaEnergy::SbaEnergy(const std::string & name,
     _grad_liquid_vf(coupledGradient("liquid_volume_fraction")),
     // Parameters:
     _isLiquid(getParam<bool>("isLiquid")),
-    _gravity(getParam<RealVectorValue>("gravity")),
     // Equation of states:
     _eos_k(getUserObject<EquationOfState>("eos_k")),
     _eos_j(getUserObject<EquationOfState>("eos_j")),
     // Interfacial variables
-    _PI(getMaterialProperty<Real>("interfacial_pressure")),
-    _PI_bar(getMaterialProperty<Real>("average_interfacial_pressure")),
     _velI(getMaterialProperty<Real>("interfacial_velocity")),
-    _velI_bar(getMaterialProperty<Real>("average_interfacial_velocity")),
     // Relaxation coefficients
-    _P_rel(getMaterialProperty<Real>("pressure_relaxation")),
-    _vel_rel(getMaterialProperty<Real>("velocity_relaxation"))
+    _P_rel(getMaterialProperty<Real>("pressure_relaxation"))
 {
   if (_mesh.dimension() != 1)
     mooseError("The function"<<this->name()<<" can only be used with a 1-D mesh");
 }
 
-Real SbaEnergy::computeQpResidual()
+Real SbaVolumeFraction::computeQpResidual()
 {
   // Compute volume fraction and its derivative of the phase k (liquid or gas):
   Real alpha_k = _isLiquid ? _liquid_vf[_qp] : 1.-_liquid_vf[_qp];
@@ -100,33 +94,21 @@ Real SbaEnergy::computeQpResidual()
   Real pressure_j = _eos_j.pressure(rho_j, vel_j, rhoE_j);
 
   // Compute convective term:
-  Real conv_k = alpha_k*_area[_qp]*vel_k*(rhoE_k+pressure_k);
-
-  // Compute volume fraction and area gradient terms:
-  Real grad_term = _area[_qp]*_PI[_qp]*_velI[_qp]*grad_alpha_k;
-
-  // Velocity relaxation term:
-  Real vel_rel_term = _area[_qp]*_velI_bar[_qp]*_vel_rel[_qp]*(vel_j - vel_k);
+  Real conv_k = _area[_qp]*_velI[_qp]*grad_alpha_k;
 
   // Pressure relaxation term:
-  Real press_rel_term = _area[_qp]*_PI_bar[_qp]*_P_rel[_qp]*(pressure_j-pressure_k);
-
-  // Relaxation terms:
-  Real rel_term = press_rel_term+vel_rel_term;
-
-  // Gravity work:
-  Real gravity_term = _alrhoA_k[_qp]*vel_k*_gravity(0);
+  Real press_rel_term = _area[_qp]*_P_rel[_qp]*(pressure_j-pressure_k);
 
   // Return
-  return -conv_k*_grad_test[_j][_qp](0) - (rel_term+grad_term+gravity_term)*_test[_i][_qp];
+  return -conv_k*_test[_i][_qp] - press_rel_term*_test[_i][_qp];
 }
 
-Real SbaEnergy::computeQpJacobian()
+Real SbaVolumeFraction::computeQpJacobian()
 {
     return 0;
 }
 
-Real SbaEnergy::computeQpOffDiagJacobian( unsigned int _jvar)
+Real SbaVolumeFraction::computeQpOffDiagJacobian( unsigned int _jvar)
 {
     return 0;
 }
