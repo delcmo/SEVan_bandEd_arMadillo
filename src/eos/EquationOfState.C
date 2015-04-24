@@ -47,6 +47,12 @@ Real EquationOfState::rho_from_p_T(Real, Real) const
   return 0.;
 }
 
+Real EquationOfState::p_from_rho_T(Real, Real) const
+{
+  this->error_not_implemented("p_from_rho_T");
+  return 0.;
+}
+
 Real
 EquationOfState::e_from_p_rho(Real, Real) const
 {

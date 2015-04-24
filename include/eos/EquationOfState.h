@@ -45,6 +45,9 @@ public:
   // Computes density from pressure and temperature for single-phase
   virtual Real rho_from_p_T(Real pressure, Real temperature) const;
 
+  // Computes pressure from density and temperature for single-phase  
+  virtual Real p_from_rho_T(Real rho, Real temperature) const;
+
   // Compute internal energy from pressure and density
   virtual Real e_from_p_rho(Real pressure, Real rho) const;
 
