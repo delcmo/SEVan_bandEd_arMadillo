@@ -30,7 +30,7 @@ InputParameters validParams<SbaVolumeFraction>()
   params.addRequiredCoupledVar("alrhouA_x_j", "x component of phase j alpha*rho*u*A");
   params.addRequiredCoupledVar("alrhoEA_j", "phase j alpha*rho*u*A");
   // Coupled aux variables:
-  params.addRequiredCoupledVar("area", "cross-section");
+  params.addCoupledVar("area", 1., "cross-section");
   params.addRequiredCoupledVar("liquid_volume_fraction", "liquid volume fraction");
   // Parameters:
   params.addParam<bool>("isLiquid", true, "boolean to determine if liquid phase or not");

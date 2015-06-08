@@ -41,6 +41,13 @@ EquationOfState::c2(Real, Real, Real) const
   return 0.;
 }
 
+Real
+EquationOfState::c2_from_rho_p(Real, Real) const
+{
+  this->error_not_implemented("c2_from_rho_p");
+  return 0.;
+}
+
 Real EquationOfState::rho_from_p_T(Real, Real) const
 {
   this->error_not_implemented("rho_from_p_T");

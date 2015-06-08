@@ -42,6 +42,9 @@ public:
   // Sound speed squared
   virtual Real c2(Real rho, Real vel, Real rhoE) const;
 
+  // Sound speed squared
+  virtual Real c2_from_rho_p(Real rho, Real pressure) const;
+
   // Computes density from pressure and temperature for single-phase
   virtual Real rho_from_p_T(Real pressure, Real temperature) const;
 

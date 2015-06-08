@@ -3,6 +3,31 @@
 #include "AppFactory.h"
 #include "ModulesApp.h"
 
+// kernels
+#include "SbaVolumeFraction.h"
+#include "SbaMass.h"
+#include "SbaMomentum.h"
+#include "SbaEnergy.h"
+#include "SbaArtificialDissipation.h"
+
+// auxkernels
+#include "DensityAux.h"
+#include "InternalEnergyAux.h"
+#include "PressureAux.h"
+#include "VelocityAux.h"
+#include "VolumeFractionAux.h"
+
+// initial conditions
+#include "SbaICs.h"
+
+// materials
+#include "ComputeViscosityCoefficient.h"
+#include "InterfacialRelaxationTransfer.h"
+
+// equation of state
+#include "EquationOfState.h"
+#include "StiffenedGasEquationOfState.h"
+
 template<>
 InputParameters validParams<SevanBandedArmadilloApp>()
 {
@@ -41,6 +66,29 @@ SevanBandedArmadilloApp::registerApps()
 void
 SevanBandedArmadilloApp::registerObjects(Factory & factory)
 {
+  // kernels
+  registerKernel(SbaMass);
+  registerKernel(SbaMomentum);
+  registerKernel(SbaEnergy);
+  registerKernel(SbaVolumeFraction);
+
+  // auxkernels
+  registerAux(DensityAux);
+  registerAux(InternalEnergyAux);
+  registerAux(PressureAux);
+  registerAux(VelocityAux);
+  registerAux(VolumeFractionAux);
+
+  // initial conditions
+  registerInitialCondition(SbaICs);
+
+  // materials
+  registerMaterial(ComputeViscosityCoefficient);
+  registerMaterial(InterfacialRelaxationTransfer);
+
+  // equation of state
+  // registerUserObject(EquationOfState);
+  registerUserObject(StiffenedGasEquationOfState);
 }
 
 void
