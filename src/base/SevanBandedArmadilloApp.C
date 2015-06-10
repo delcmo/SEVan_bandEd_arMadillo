@@ -20,6 +20,9 @@
 // initial conditions
 #include "SbaICs.h"
 
+// boundary conditions
+#include "SbaDirichletBC.h"
+
 // materials
 #include "ComputeViscosityCoefficient.h"
 #include "InterfacialRelaxationTransfer.h"
@@ -71,6 +74,7 @@ SevanBandedArmadilloApp::registerObjects(Factory & factory)
   registerKernel(SbaMomentum);
   registerKernel(SbaEnergy);
   registerKernel(SbaVolumeFraction);
+  registerKernel(SbaArtificialDissipation);
 
   // auxkernels
   registerAux(DensityAux);
@@ -82,12 +86,15 @@ SevanBandedArmadilloApp::registerObjects(Factory & factory)
   // initial conditions
   registerInitialCondition(SbaICs);
 
+  // boundary conditions
+  registerBoundaryCondition(SbaDirichletBC);
+
   // materials
   registerMaterial(ComputeViscosityCoefficient);
   registerMaterial(InterfacialRelaxationTransfer);
 
   // equation of state
-  // registerUserObject(EquationOfState);
+  registerUserObject(EquationOfState);
   registerUserObject(StiffenedGasEquationOfState);
 }
 

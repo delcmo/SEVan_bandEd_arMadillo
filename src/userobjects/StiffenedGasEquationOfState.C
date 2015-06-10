@@ -67,12 +67,18 @@ Real StiffenedGasEquationOfState::c2_from_rho_p(Real rho, Real pressure) const
 }
 
 Real
-StiffenedGasEquationOfState::rho_from_p_T(Real pressure, Real temperature, Real) const
+StiffenedGasEquationOfState::rho_from_p_T(Real pressure, Real temperature) const
 {
   if (((_gamma - 1) * _cv * temperature) == 0.0)
     mooseError("Invalid gamma or cv or temperature detected!");
 
   return (pressure + _p_inf) / ((_gamma - 1) * _cv * temperature);
+}
+
+Real
+StiffenedGasEquationOfState::p_from_rho_T(Real rho, Real temperature) const
+{
+  return rho * (_gamma - 1) * _cv * temperature - _p_inf;
 }
 
 Real

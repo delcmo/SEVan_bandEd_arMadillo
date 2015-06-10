@@ -7,7 +7,7 @@ InputParameters validParams<InterfacialRelaxationTransfer>()
   InputParameters params = validParams<Material>();
 
   params.addParam<std::string>("interfacial_definition_name", "NO_RELAXATION", "Choose definition to compute interfacial variables.");
-  params.addParam<Real>("xi_ambrosso", 0.5, "value for definition of interfacial variables");
+  params.addParam<Real>("xi_ambrosso", "value for definition of interfacial variables");
   // Conservative variables for phase k:
   params.addRequiredCoupledVar("alrhoA_k", " phase k alpha*rho*A");
   params.addRequiredCoupledVar("alrhouA_x_k", "x component of phase k alpha*rho*u*A");
@@ -20,8 +20,8 @@ InputParameters validParams<InterfacialRelaxationTransfer>()
   params.addCoupledVar("area", 1., "cross-section");
   params.addRequiredCoupledVar("volume_fraction_phase_k", "volume fraction of phase k");
   // Maximum specific interfacial area:
-  params.addParam<Real>("Aint_max_press", 0., "Maximum specific interfacial area for pressure relaxation coefficient");
-  params.addParam<Real>("Aint_max_vel", 0., "Maximum specific interfacial area for velocity relaxation coefficient");
+  params.addParam<Real>("Aint_max_press", "Maximum specific interfacial area for pressure relaxation coefficient"); // no need of a default value
+  params.addParam<Real>("Aint_max_vel", "Maximum specific interfacial area for velocity relaxation coefficient"); // no need to a default value
   // Equation of states:
   params.addRequiredParam<UserObjectName>("eos_k", "Equation of state for phase k");
   params.addRequiredParam<UserObjectName>("eos_j", "Equation of state for phase j");
@@ -32,8 +32,8 @@ InputParameters validParams<InterfacialRelaxationTransfer>()
 InterfacialRelaxationTransfer::InterfacialRelaxationTransfer(const std::string & name, InputParameters parameters) :
     Material(name, parameters),
     // Definition for interfacial variables:
-    _interfacial_param_def("BERRY AMBROSSO LIANG NO_RELAXATION", getParam<std::string>("inter_def_name")),
-    _xi(getParam<Real>("xi_ambrosso")),
+    _interfacial_param_def("BERRY AMBROSSO LIANG NO_RELAXATION", getParam<std::string>("interfacial_definition_name")),
+    _xi(isParamValid("xi_ambrosso") ? getParam<Real>("xi_ambrosso") : 0.),
     // Conservative variables for phase k:
     _alrhoA_k(coupledValue("alrhoA_k")),
     _alrhouA_x_k(coupledValue("alrhouA_x_k")),
@@ -74,6 +74,9 @@ InterfacialRelaxationTransfer::InterfacialRelaxationTransfer(const std::string &
   if (parameters.isParamValid("Aint_max_press") && parameters.isParamValid("Aint_max_vel"))
     _has_max_specific_interf_area = true;
 
+  // Ambrosso model
+  if (!parameters.isParamValid("xi_ambrosso") && _interfacial_param_def==AMBROSSO)
+    mooseError("A value for 'xi_ambrosse' was not specified when using the option '"<<_interfacial_param_def<<"' to compute the interfacial variables.");
 }
 
 void

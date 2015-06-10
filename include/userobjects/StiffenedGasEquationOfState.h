@@ -20,7 +20,8 @@ public:
   virtual Real temperature(Real rho, Real rhou, Real rhoE) const;
   virtual Real c2(Real rho, Real rhou, Real rhoE) const;
   virtual Real c2_from_rho_p(Real, Real) const;
-  virtual Real rho_from_p_T(Real pressure, Real temperature, Real void_fraction = 1.0) const;
+  virtual Real rho_from_p_T(Real pressure, Real temperature) const;
+  virtual Real p_from_rho_T(Real rho, Real temperature) const;
   virtual Real e_from_p_rho(Real pressure, Real rho) const;
   virtual Real temp_from_p_rho(Real pressure, Real rho) const;
 

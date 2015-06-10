@@ -57,8 +57,8 @@ ComputeViscosityCoefficient::ComputeViscosityCoefficient(const std::string & nam
     _alpha_l_old(_isLiquid ? coupledValueOld("volume_fraction_liquid") : _zero),
     _alpha_l_older(_isLiquid ? coupledValueOlder("volume_fraction_liquid") : _zero),
     _grad_alpha_l(_isLiquid ? coupledGradient("volume_fraction_liquid") : _grad_zero),
-    // Velocity variables:
-    _vel_x(coupledValue("velocity_x")),
+//    // Velocity variables:
+//    _vel_x(coupledValue("velocity_x")),
     // Pressure:
     _pressure(coupledValue("pressure")),
     _pressure_old(coupledValueOld("pressure")),

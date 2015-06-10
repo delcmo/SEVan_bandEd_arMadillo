@@ -10,29 +10,19 @@
 
 # GLOBAL PARAMETERS
 [GlobalParams]
-  # entropy viscosity parameter
-  viscosity_name = FIRST_ORDER
-
-  # mass and heat transfer
-  isJumpOn = false
-  isMassOn = false
-  isHeatOn = false
-  isShock = false
-
   # initial Conditions
-  pressure_init_left = 1e6
-  pressure_init_right = 0.5e6
-  vel_init_left = 10
-  vel_init_right = 10
+  pressure_init_left = 1.e6
+  pressure_init_right = 1.e6
+  vel_init_left = 0.
+  vel_init_right = 0.
   temp_init_left = 453.
   temp_init_right = 453.
-  alpha_init_left = 0.5
-  alpha_init_right = 0.5
-  membrane = 0.5
-  length = 1.
+  liq_vf_init_left = 0.6
+  liq_vf_init_right = 0.4
+  membrane_position = 0.5
 []
 
-# USER OBJECTS
+# USEROBJECTS
 [UserObjects]
   # liquid
   [./eos_liq]
@@ -62,8 +52,8 @@
     family = LAGRANGE
     scaling = 1e+0
     [./InitialCondition]
-        type = FunctionIC
-        function = 
+      type = SbaICs
+      eos = eos_liq
     [../]
   [../]
 
@@ -71,8 +61,8 @@
     family = LAGRANGE
     scaling = 1e+0
     [./InitialCondition]
-        type = ConstantIC
-        value = 1.
+      type = SbaICs
+      eos = eos_liq
     [../]
   [../]
 
@@ -80,17 +70,17 @@
     family = LAGRANGE
     scaling = 1e+0
     [./InitialCondition]
-      type = ConstantIC
-      value = 0.
+      type = SbaICs
+      eos = eos_liq
     [../]
   [../]
 
   [./alrhoEA_liq]
     family = LAGRANGE
-    scaling = 1e+0
+    scaling = 1e-6
     [./InitialCondition]
-      type = ConstantIC
-      value = 1.
+      type = SbaICs
+      eos = eos_liq
     [../]
   [../]
 
@@ -99,8 +89,9 @@
     family = LAGRANGE
     scaling = 1e+0
     [./InitialCondition]
-      type = ConstantIC
-      value = 1.
+      type = SbaICs
+      eos = eos_gas
+      isLiquid = false
     [../]
   [../]
 
@@ -108,17 +99,19 @@
     family = LAGRANGE
     scaling = 1e+0
     [./InitialCondition]
-      type = ConstantIC
-      value = 0.
+      type = SbaICs
+      eos = eos_gas
+      isLiquid = false
     [../]
   [../]
 
   [./alrhoEA_gas]
     family = LAGRANGE
-    scaling = 1e+0
+    scaling = 1e-6
     [./InitialCondition]
-      type = ConstantIC
-      value = 1.
+      type = SbaICs
+      eos = eos_gas
+      isLiquid = false
     [../]
   [../]
 []
@@ -135,8 +128,11 @@
     type = SbaVolumeFraction
     variable = alA_liq
     alrhoA_k = alrhoA_liq
-    alrhouA_k = alrhouA_liq
+    alrhouA_x_k = alrhouA_liq
     alrhoEA_k = alrhoEA_liq
+    alrhoA_j = alrhoA_gas
+    alrhouA_x_j = alrhouA_gas
+    alrhoEA_j = alrhoEA_gas
     liquid_volume_fraction = vf_aux_liq
     eos_k = eos_liq
     eos_j = eos_gas
@@ -255,7 +251,7 @@
   # nodal variables liquid phase
   [./VolumeFractionLiquidAK]
     type = VolumeFractionAux
-    variable = alpha_aux_liq
+    variable = vf_aux_liq
     alA = alA_liq
   [../]
 
@@ -268,9 +264,9 @@
 
   [./DensitLiquidAK]
     type = DensityAux
+    alA = alA_liq
     variable = density_aux_liq
     alrhoA = alrhoA_liq
-    vf_aux_liquid = alpha_aux_liq
   [../]
 
   [./InternalEnergyLiquidAK]
@@ -310,15 +306,14 @@
     type = VelocityAux
     variable = velocity_x_aux_gas
     alrhoA = alrhoA_gas
-    alrhouA = alrhouA_gas
+    alrhouA_x = alrhouA_gas
   [../]
 
   [./DensityGasAK]
     type = DensityAux
     variable = density_aux_gas
+    alA = alA_liq
     alrhoA = alrhoA_gas
-    vf_aux_liquid = alpha_aux_l
-    area = area_aux
     isLiquid = false
   [../]
 
@@ -332,7 +327,7 @@
     isLiquid = false
   [../]
 
-  [./PressureLiquidAK]
+  [./PressureGasdAK]
     type = PressureAux
     variable = pressure_aux_gas
     alA = alA_liq
@@ -365,10 +360,10 @@
     type = ComputeViscosityCoefficient
     block = '0'
     alrhoA_k = alrhoA_liq
-    alrhouA_k = alrhouA_liq
+    alrhouA_x_k = alrhouA_liq
     pressure = pressure_aux_liq
     density = density_aux_liq
-    volume_fraction_liquid = alpha_aux_liq
+    volume_fraction_liquid = vf_aux_liq
     eos = eos_liq
   [../]
 
@@ -377,11 +372,12 @@
     type = ComputeViscosityCoefficient
     block = '0'
     alrhoA_k = alrhoA_gas
-    alrhouA_k = alrhouA_gas
+    alrhouA_x_k = alrhouA_gas
     pressure = pressure_aux_gas
     density = density_aux_gas
-    volume_fraction_liquid = alpha_aux_liq
+    volume_fraction_liquid = vf_aux_liq
     eos = eos_gas
+    isLiquid = false
   [../]
 
   # materials for interfacial area
@@ -389,14 +385,16 @@
     type = InterfacialRelaxationTransfer
     block = '0'
     alrhoA_k = alrhoA_liq
-    alrhouA_k = alrhouA_liq
+    alrhouA_x_k = alrhouA_liq
     alrhoEA_k = alrhoEA_liq
     alrhoA_j = alrhoA_gas
-    alrhouA_j = alrhouA_gas
+    alrhouA_x_j = alrhouA_gas
     alrhoEA_j = alrhoEA_gas
     volume_fraction_phase_k = vf_aux_liq
-    eos_liq = eos_liq
-    eos_gas = eos_gas
+    Aint_max_press = 0.
+    Aint_max_vel = 0.
+    eos_k = eos_liq
+    eos_j = eos_gas
   [../]
 []
 
@@ -410,50 +408,53 @@
   [./VoidFractionLeftLiq]
     type = DirichletBC
     variable = alA_liq
-    value = 0.5
+    value = 0.6
     boundary = 'left'
   [../]
 
   [./MassLiquid]
-    type = DirichletBC
+    type = SbaDirichletBC
     variable = alrhoA_liq
-    value = 1.
+    eos = eos_liq
     boundary = 'left right'
   [../]
 
   [./MomentumLiquid]
-    type = DirichletBC
+    type = SbaDirichletBC
     variable = alrhouA_liq
-    value = 0.
+    eos = eos_liq
     boundary = 'left right'
   [../]
 
   [./EnergyLiquid]
-    type = DirichletBC
+    type = SbaDirichletBC
     variable = alrhoEA_liq
-    value = 1.
+    eos = eos_liq
     boundary = 'left right'
   [../]
 
   # gas phase
   [./MassGas]
-    type = DirichletBC
+    type = SbaDirichletBC
     variable = alrhoA_gas
-    value = 1.
-    boundary = 'left'
+    eos = eos_gas
+    isLiquid = false
+    boundary = 'left right'
   [../]
 
   [./MomentumGas]
-    type = DirichletBC
+    type = SbaDirichletBC
     variable = alrhouA_gas
-    value = 0
+    eos = eos_gas
+    isLiquid = false
     boundary = 'left right'
   [../]
 
   [./EnergyGas]
-    type = DirichletBC
+    type = SbaDirichletBC
     variable = alrhoEA_gas
-    value = 1.
+    eos = eos_gas
+    isLiquid = false
     boundary = 'left right'
   [../]
 []
@@ -474,23 +475,20 @@
 [Executioner]
   type = Transient
   scheme = 'bdf2'
-#  num_steps = 1
+  num_steps = 2
   end_time = 1.
   dt = 1.e-2
   dtmin = 1e-9
   l_tol = 1e-8
   nl_rel_tol = 1e-10
-  nl_abs_tol = 1e-9
+  nl_abs_tol = 1e-7
   l_max_its = 50
   nl_max_its = 10
-[./TimeStepper]
+
+  [./TimeStepper]
     type = FunctionDT
-#    time_t =  '0.      2.e-4    1.e-2   2.e-2   0.56'
-#    time_dt = '1.e-5   1.e-4    1.e-4   1.e-3   1.e-3'
     time_t =  '0.      1.e-2    2.e-2   4.e-2   0.56'
     time_dt = '1.e-4   1.e-4    1.e-3   1.e-3   1.e-3'
-#    time_t =  '0.      1.e-2    3.e-2   1.e-1   0.56'
-#    time_dt = '1.e-2   1.e-3    1.e-3   1.e-3   1.e-3'
   [../]
 
   [./Quadrature]
@@ -502,14 +500,12 @@
 # OUTPUT
 [Outputs]
   output_initial = true
-  interval = 20
+  interval = 1
   console = true
   exodus = true
-  postprocessor_screen = true
-  perf_log = true
 []
 
 # DEBUG
 [Debug]
-#  show_var_residual_norms = true
+  show_var_residual_norms = true
 []

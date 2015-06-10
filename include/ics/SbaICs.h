@@ -44,7 +44,7 @@ private:
   int _ics_type;
 
   // Function area
-  Function & _area;
+  Function * _area;
 
   // Initial values for pressure:
   Real _p_left;

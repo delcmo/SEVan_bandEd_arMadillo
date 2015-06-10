@@ -41,7 +41,7 @@ private:
   VariableGradient & _grad_alpha_l;
 
   // Coupled aux variables
-  VariableValue & _vel_x;
+//  VariableValue & _vel_x;
 
   // Pressure:
   VariableValue & _pressure;

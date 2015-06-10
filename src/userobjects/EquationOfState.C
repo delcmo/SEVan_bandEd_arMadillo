@@ -8,7 +8,7 @@ InputParameters validParams<EquationOfState>()
 
   params.addPrivateParam<MultiMooseEnum>("execute_on");
   params.addPrivateParam<bool>("use_displaced_mesh");
-  params.registerBase("EquationOfState");
+//  params.registerBase("EquationOfState");
 
   return params;
 }

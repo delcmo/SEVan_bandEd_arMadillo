@@ -42,7 +42,7 @@ SbaArtificialDissipation::SbaArtificialDissipation(const std::string & name,
                        InputParameters parameters) :
   Kernel(name, parameters),
     // Declare equation types
-    _equ_type("VOLUME_FRACTION, CONTINUITY, XMOMENTUM, ENERGY, INVALID", getParam<std::string>("equation_name")),
+    _equ_type("VOLUME_FRACTION CONTINUITY XMOMENTUM ENERGY INVALID", getParam<std::string>("equation_name")),
     // Boolean
     _isLiquid(getParam<bool>("isLiquid")),
     // Coupled auxilary variables
