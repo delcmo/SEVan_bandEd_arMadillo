@@ -578,7 +578,6 @@
     alrhouA_x_k = alrhouA_gas
     pressure = pressure_aux_gas
     density = density_aux_gas
-    volume_fraction_liquid = vf_aux_liq
     eos = eos_gas
     isLiquid = false
   [../]
@@ -593,7 +592,6 @@
     alrhoA_j = alrhoA_gas
     alrhouA_x_j = alrhouA_gas
     alrhoEA_j = alrhoEA_gas
-    volume_fraction_phase_k = vf_aux_liq
     Aint_max_press = 0.
     Aint_max_vel = 0.
     eos_k = eos_liq
