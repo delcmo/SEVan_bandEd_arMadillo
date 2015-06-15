@@ -16,7 +16,6 @@
 #define SBAARTIFICIALDISSIPATION_H
 
 #include "Kernel.h"
-#include "EquationOfState.h"
 
 // Forward Declarations
 class SbaArtificialDissipation;
@@ -69,15 +68,12 @@ private:
   VariableGradient & _grad_alpha_liq;
 
   // Material property: viscosity coefficient.
-  MaterialProperty<Real> & _mu_liq;
-  MaterialProperty<Real> & _mu_gas;
-  MaterialProperty<Real> & _kappa_liq;
-  MaterialProperty<Real> & _kappa_gas;
-  MaterialProperty<Real> & _beta_liq;
-  MaterialProperty<Real> & _beta_gas;
-
-  // Equation of state:
-  const EquationOfState & _eos;
+  const MaterialProperty<Real> & _mu_liq;
+  const MaterialProperty<Real> & _mu_gas;
+  const MaterialProperty<Real> & _kappa_liq;
+  const MaterialProperty<Real> & _kappa_gas;
+  const MaterialProperty<Real> & _beta_liq;
+  const MaterialProperty<Real> & _beta_gas;
 };
 
 #endif // SBAARTIFICIALDISSIPATION_H

@@ -33,8 +33,7 @@ SbaMass::SbaMass(const std::string & name,
     // Conservative variables for phase k:
     _alrhouA_x_k(coupledValue("alrhouA_x_k"))
 {
-  if (_mesh.dimension() != 1)
-    mooseError("The function "<<this->name()<<" can only be used with a 1-D mesh");
+  mooseAssert(_mesh.dimension() != 1, "The function "<<this->name()<<" can only be used with a 1-D mesh");
 }
 
 Real SbaMass::computeQpResidual()

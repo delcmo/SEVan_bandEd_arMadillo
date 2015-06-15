@@ -12,32 +12,21 @@
 [GlobalParams]
   # initial Conditions
   pressure_init_left = 1.e6
-  pressure_init_right = 0.5e6
-  vel_init_left = 0.
-  vel_init_right = 0.
+  pressure_init_right = 1.e6
+  vel_init_left = 10.
+  vel_init_right = 10.
   temp_init_left = 453.
   temp_init_right = 453.
-  liq_vf_init_left = 0.5
+  liq_vf_init_left = 0.6
   liq_vf_init_right = 0.5
   membrane_position = 0.5
-  length = 1.
-
-  # boundary conditions
-  p0_bc = 1.e6
-  T0_bc = 453.
-  p_bc = 0.5e6
 
   # interfacial variables
-#  interfacial_definition_name = BERRY
-#  interfacial_variables_on = false
-[]
+  interfacial_definition_name = BERRY
+  interfacial_variables_on = true
 
-# FUNCTIONS
-[Functions]
-  [./area]
-    type = ParsedFunction
-    value = 1+0.5*cos(2*pi*x)
-  [../]
+  # cfl
+  cfl = 1.
 []
 
 # USEROBJECTS
@@ -71,7 +60,6 @@
     scaling = 1e+0
     [./InitialCondition]
       type = SbaICs
-      area = area
       eos = eos_liq
     [../]
   [../]
@@ -81,7 +69,6 @@
     scaling = 1e+0
     [./InitialCondition]
       type = SbaICs
-      area = area
       eos = eos_liq
     [../]
   [../]
@@ -91,7 +78,6 @@
     scaling = 1e-2
     [./InitialCondition]
       type = SbaICs
-      area = area      
       eos = eos_liq
     [../]
   [../]
@@ -101,7 +87,6 @@
     scaling = 1e-4
     [./InitialCondition]
       type = SbaICs
-      area = area
       eos = eos_liq
     [../]
   [../]
@@ -112,7 +97,6 @@
     scaling = 1e+0
     [./InitialCondition]
       type = SbaICs
-      area = area
       eos = eos_gas
       isLiquid = false
     [../]
@@ -123,7 +107,6 @@
     scaling = 1e-4
     [./InitialCondition]
       type = SbaICs
-      area = area      
       eos = eos_gas
       isLiquid = false
     [../]
@@ -134,7 +117,6 @@
     scaling = 1e-6
     [./InitialCondition]
       type = SbaICs
-      area = area      
       eos = eos_gas
       isLiquid = false
     [../]
@@ -158,7 +140,6 @@
     alrhoA_j = alrhoA_gas
     alrhouA_x_j = alrhouA_gas
     alrhoEA_j = alrhoEA_gas
-    area = area_aux
     liquid_volume_fraction = vf_aux_liq
     eos_k = eos_liq
     eos_j = eos_gas
@@ -172,7 +153,6 @@
     pressure = pressure_aux_liq
     velocity_x =   velocity_x_aux_liq
     internal_energy = internal_energy_aux_liq
-    area = area_aux
     liquid_volume_fraction = vf_aux_liq
   [../]
 
@@ -196,7 +176,6 @@
     pressure = pressure_aux_liq
     velocity_x =   velocity_x_aux_liq
     internal_energy = internal_energy_aux_liq
-    area = area_aux    
     liquid_volume_fraction = vf_aux_liq
   [../]
 
@@ -213,7 +192,6 @@
     alrhoEA_k = alrhoEA_liq
     alrhoA_j = alrhoA_gas
     alrhouA_x_j = alrhouA_gas
-    area = area_aux    
     liquid_volume_fraction = vf_aux_liq
     eos_k = eos_liq
   [../]
@@ -226,7 +204,6 @@
     pressure = pressure_aux_liq
     velocity_x =   velocity_x_aux_liq
     internal_energy = internal_energy_aux_liq
-    area = area_aux    
     liquid_volume_fraction = vf_aux_liq
   [../]
 
@@ -244,7 +221,6 @@
     alrhoA_j = alrhoA_gas
     alrhouA_x_j = alrhouA_gas
     alrhoEA_j = alrhoEA_gas
-    area = area_aux    
     liquid_volume_fraction = vf_aux_liq
     eos_k = eos_liq
     eos_j = eos_gas
@@ -258,7 +234,6 @@
     pressure = pressure_aux_liq
     velocity_x =   velocity_x_aux_liq
     internal_energy = internal_energy_aux_liq
-    area = area_aux    
     liquid_volume_fraction = vf_aux_liq
   [../]
 
@@ -282,7 +257,6 @@
     pressure = pressure_aux_gas
     velocity_x =   velocity_x_aux_gas
     internal_energy = internal_energy_aux_gas
-    area = area_aux    
     liquid_volume_fraction = vf_aux_liq
     isLiquid = false
   [../]
@@ -300,7 +274,6 @@
     alrhoEA_k = alrhoEA_gas
     alrhoA_j = alrhoA_liq
     alrhouA_x_j = alrhouA_liq
-    area = area_aux    
     liquid_volume_fraction = vf_aux_liq
     eos_k = eos_gas
     isLiquid = false
@@ -314,7 +287,6 @@
     pressure = pressure_aux_gas
     velocity_x =   velocity_x_aux_gas
     internal_energy = internal_energy_aux_gas
-    area = area_aux    
     liquid_volume_fraction = vf_aux_liq
     isLiquid = false
   [../]
@@ -333,7 +305,6 @@
     alrhoA_j = alrhoA_liq
     alrhouA_x_j = alrhouA_liq
     alrhoEA_j = alrhoEA_liq
-    area = area_aux    
     liquid_volume_fraction = vf_aux_liq
     eos_k = eos_gas
     eos_j = eos_liq
@@ -348,7 +319,6 @@
     pressure = pressure_aux_gas
     velocity_x =   velocity_x_aux_gas
     internal_energy = internal_energy_aux_gas
-    area = area_aux    
     liquid_volume_fraction = vf_aux_liq
     isLiquid = false
   [../]
@@ -356,10 +326,6 @@
 
 # AUXILARY VARIABLES
 [AuxVariables]
-  [./area_aux]
-    family = LAGRANGE
-  [../]
-
   # nodal variables liquid phase
   [./vf_aux_liq]
     family = LAGRANGE
@@ -398,7 +364,7 @@
     family = LAGRANGE
   [../]
 
-  # elemental variables
+  # elemental variables for liquid phase
   [./beta_max_aux_liq]
     family = MONOMIAL
     order = CONSTANT
@@ -409,17 +375,8 @@
     order = CONSTANT
   [../]
 
+  # elemental variables for gas phase
   [./beta_max_aux_gas]
-    family = MONOMIAL
-    order = CONSTANT
-  [../]
-
-  [./kappa_max_aux_liq]
-    family = MONOMIAL
-    order = CONSTANT
-  [../]
-
-  [./kappa_aux_liq]
     family = MONOMIAL
     order = CONSTANT
   [../]
@@ -429,12 +386,8 @@
     order = CONSTANT
   [../]
 
-  [./kappa_max_aux_gas]
-    family = MONOMIAL
-    order = CONSTANT
-  [../]
-
-  [./kappa_aux_gas]
+  # elemental interfacial variables
+  [./velI_aux]
     family = MONOMIAL
     order = CONSTANT
   [../]
@@ -442,18 +395,11 @@
 
 # AUXILARY KERNELS
 [AuxKernels]
-  [./AreaAux]
-    type = FunctionAux
-    variable = area_aux
-    function = area
-  [../]
-
   # nodal variables liquid phase
   [./VolumeFractionLiquidAK]
     type = VolumeFractionAux
     variable = vf_aux_liq
     alA = alA_liq
-    area = area_aux    
   [../]
 
   [./VelocityLiquidAK]
@@ -468,7 +414,6 @@
     alA = alA_liq
     variable = density_aux_liq
     alrhoA = alrhoA_liq
-    area = area_aux
   [../]
 
   [./InternalEnergyLiquidAK]
@@ -478,7 +423,6 @@
     alrhoA = alrhoA_liq
     alrhouA_x = alrhouA_liq
     alrhoEA = alrhoEA_liq
-    area = area_aux
   [../]
 
   [./PressureLiquidAK]
@@ -488,33 +432,20 @@
     alrhoA = alrhoA_liq
     alrhouA_x = alrhouA_liq
     alrhoEA = alrhoEA_liq
-    area = area_aux    
     eos = eos_liq
   [../]
 
-  # elemental variables liquid phase
   [./BetaMaxLiquidAK]
     type = MaterialRealAux
     variable = beta_max_aux_liq
     property = beta_max_liq
   [../]
 
+  # elemental variables liquid phase
   [./BetaLiquidAK]
     type = MaterialRealAux
     variable = beta_aux_liq
     property = beta_liq
-  [../]
-  
-  [./KappaMaxLiquidAK]
-    type = MaterialRealAux
-    variable = kappa_max_aux_liq
-    property = kappa_max_liq
-  [../]
-
-  [./KappaLiquidAK]
-    type = MaterialRealAux
-    variable = kappa_aux_liq
-    property = kappa_liq
   [../]
 
   # Nodal variables gas phase
@@ -530,7 +461,6 @@
     variable = density_aux_gas
     alA = alA_liq
     alrhoA = alrhoA_gas
-    area = area_aux    
     isLiquid = false
   [../]
 
@@ -541,7 +471,6 @@
     alrhoA = alrhoA_gas
     alrhouA_x = alrhouA_gas
     alrhoEA = alrhoEA_gas
-    area = area_aux    
     isLiquid = false
   [../]
 
@@ -552,7 +481,6 @@
     alrhoA = alrhoA_gas
     alrhouA_x = alrhouA_gas
     alrhoEA = alrhoEA_gas
-    area = area_aux    
     eos = eos_gas
     isLiquid = false
   [../]
@@ -569,17 +497,12 @@
     variable = beta_aux_gas
     property = beta_gas
   [../]
-  
-  [./KappaMaxGasAK]
-    type = MaterialRealAux
-    variable = kappa_max_aux_gas
-    property = kappa_max_gas
-  [../]
 
-  [./KappaGasAK]
+  # elemental interfacial variables
+  [./velI_aux]
     type = MaterialRealAux
-    variable = kappa_aux_gas
-    property = kappa_gas
+    variable = velI_aux
+    property = interfacial_velocity
   [../]
 []
 
@@ -595,7 +518,6 @@
     pressure = pressure_aux_liq
     density = density_aux_liq
     volume_fraction_liquid = vf_aux_liq
-    area = area_aux
     eos = eos_liq
   [../]
 
@@ -608,7 +530,6 @@
     pressure = pressure_aux_gas
     density = density_aux_gas
     volume_fraction_liquid = vf_aux_liq
-    area = area_aux
     eos = eos_gas
     isLiquid = false
   [../]
@@ -624,7 +545,6 @@
     alrhouA_x_j = alrhouA_gas
     alrhoEA_j = alrhoEA_gas
     volume_fraction_phase_k = vf_aux_liq
-    area = area_aux    
     Aint_max_press = 0.
     Aint_max_vel = 0.
     eos_k = eos_liq
@@ -634,6 +554,18 @@
 
 # POSTPROCESSORS
 [Postprocessors]
+  [./TimeStepCFL]
+    type = TimeStepCFL
+    alA_k = alA_liq
+    alrhoA_k = alrhoA_liq
+    alrhouA_x_k = alrhouA_liq
+    alrhoEA_k = alrhoEA_liq
+    alrhoA_j = alrhoA_gas
+    alrhouA_x_j = alrhouA_gas
+    alrhoEA_j = alrhoEA_gas
+    eos_k = eos_liq
+    eos_j = eos_gas
+  [../]
 []
 
 # BOUNDARY CONDITIONS
@@ -642,166 +574,105 @@
   [./VoidFractionLeftLiq]
     type = SbaDirichletBC
     variable = alA_liq
-    area = area
     eos = eos_liq
     boundary = 'left'
   [../]
 
   [./MassLiquidLeft]
-    type = SbaStagnationPandTBC
+    type = SbaDirichletBC
     variable = alrhoA_liq
-    equation_name = CONTINUITY
-    alA = alA_liq
-    alrhoA = alrhoA_liq
-    alrhouA_x = alrhouA_liq
-    area = area_aux
     eos = eos_liq
     boundary = 'left'
   [../]
 
   [./MassLiquidRight]
-    type = SbaOutletStaticPressureBC
+    type = SbaDirichletBC
     variable = alrhoA_liq
-    equation_name = CONTINUITY
-    alA = alA_liq
-    alrhoA = alrhoA_liq
-    alrhouA_x = alrhouA_liq
-    alrhoEA = alrhoEA_liq
-    area = area_aux
     eos = eos_liq
     boundary = 'right'
+    leftBoundary = false
   [../]
 
   [./MomentumLiquidLeft]
-    type = SbaStagnationPandTBC
+    type = SbaDirichletBC
     variable = alrhouA_liq
-    equation_name = XMOMENTUM
-    alA = alA_liq
-    alrhoA = alrhoA_liq
-    alrhouA_x = alrhouA_liq
-    area = area_aux
     eos = eos_liq
     boundary = 'left'
   [../]
 
   [./MomentumLiquidRight]
-    type = SbaOutletStaticPressureBC
+    type = SbaDirichletBC
     variable = alrhouA_liq
-    equation_name = XMOMENTUM
-    alA = alA_liq
-    alrhoA = alrhoA_liq
-    alrhouA_x = alrhouA_liq
-    alrhoEA = alrhoEA_liq
-    area = area_aux
     eos = eos_liq
     boundary = 'right'
+    leftBoundary = false
   [../]
 
   [./EnergyLiquidLeft]
-    type = SbaStagnationPandTBC
+    type = SbaDirichletBC
     variable = alrhoEA_liq
-    equation_name = ENERGY
-    alA = alA_liq
-    alrhoA = alrhoA_liq
-    alrhouA_x = alrhouA_liq
-    area = area_aux
     eos = eos_liq
     boundary = 'left'
   [../]
 
   [./EnergyLiquidRight]
-    type = SbaOutletStaticPressureBC
+    type = SbaDirichletBC
     variable = alrhoEA_liq
-    equation_name = ENERGY
-    alA = alA_liq
-    alrhoA = alrhoA_liq
-    alrhouA_x = alrhouA_liq
-    alrhoEA = alrhoEA_liq
-    area = area_aux
     eos = eos_liq
     boundary = 'right'
+    leftBoundary = false
   [../]
 
   # gas phase
   [./MassGasLeft]
-    type = SbaStagnationPandTBC
+    type = SbaDirichletBC
     variable = alrhoA_gas
-    equation_name = CONTINUITY
-    alA = alA_liq
-    alrhoA = alrhoA_gas
-    alrhouA_x = alrhouA_gas
-    area = area_aux
     eos = eos_gas
     isLiquid = false
     boundary = 'left'
   [../]
 
   [./MassGasRight]
-    type = SbaOutletStaticPressureBC
+    type = SbaDirichletBC
     variable = alrhoA_gas
-    equation_name = CONTINUITY
-    alA = alA_liq
-    alrhoA = alrhoA_gas
-    alrhouA_x = alrhouA_gas
-    alrhoEA = alrhoEA_gas
-    area = area_aux
     eos = eos_gas
     isLiquid = false
     boundary = 'right'
+    leftBoundary = false
   [../]
 
   [./MomentumGasLeft]
-    type = SbaStagnationPandTBC
+    type = SbaDirichletBC
     variable = alrhouA_gas
-    equation_name = XMOMENTUM
-    alA = alA_liq
-    alrhoA = alrhoA_gas
-    alrhouA_x = alrhouA_gas
-    area = area_aux
     eos = eos_gas
     isLiquid = false
     boundary = 'left'
   [../]
 
   [./MomentumGasRight]
-    type = SbaOutletStaticPressureBC
+    type = SbaDirichletBC
     variable = alrhouA_gas
-    equation_name = XMOMENTUM
-    alA = alA_liq
-    alrhoA = alrhoA_gas
-    alrhouA_x = alrhouA_gas
-    alrhoEA = alrhoEA_gas
-    area = area_aux
     eos = eos_gas
     isLiquid = false
     boundary = 'right'
+    leftBoundary = false
   [../]
 
   [./EnergyGasLeft]
-    type = SbaStagnationPandTBC
+    type = SbaDirichletBC
     variable = alrhoEA_gas
-    equation_name = ENERGY
-    alA = alA_liq
-    alrhoA = alrhoA_gas
-    alrhouA_x = alrhouA_gas
-    area = area_aux
     eos = eos_gas
     isLiquid = false
     boundary = 'left'
   [../]
 
   [./EnergyGasRight]
-    type = SbaOutletStaticPressureBC
+    type = SbaDirichletBC
     variable = alrhoEA_gas
-    equation_name = ENERGY
-    alA = alA_liq
-    alrhoA = alrhoA_gas
-    alrhouA_x = alrhouA_gas
-    alrhoEA = alrhoEA_gas
-    area = area_aux
     eos = eos_gas
     isLiquid = false
     boundary = 'right'
+    leftBoundary = false
   [../]
 []
 
@@ -821,20 +692,19 @@
 [Executioner]
   type = Transient
   scheme = 'bdf2'
-  num_steps = 100000
-  end_time = 2.
-  dt = 1.e-2
+  num_steps = 32
+  end_time = 1.e-2
   dtmin = 1e-9
   l_tol = 1e-8
-  nl_rel_tol = 1e-12
-  nl_abs_tol = 1e-7
+  nl_rel_tol = 1e-8
+  nl_abs_tol = 1e-5
   l_max_its = 50
   nl_max_its = 10
 
   [./TimeStepper]
-    type = FunctionDT
-    time_t =  '0.      1.e-1'
-    time_dt = '1.e-5   1.e-2'
+    type = PostprocessorDT
+    postprocessor = TimeStepCFL
+    dt = 1.e-6
   [../]
 
   [./Quadrature]

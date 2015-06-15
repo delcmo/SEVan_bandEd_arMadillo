@@ -18,8 +18,8 @@ InputParameters validParams<SbaDirichletBC>()
   params.addParam<Real>("temp_init_left", "Left initil value of the temperature");
   params.addParam<Real>("temp_init_right", "Right initil value of the temperature");
   // Initial density conditions:
-  params.addParam<Real>("rho_init_left_liq", "Left initial value of the density");
-  params.addParam<Real>("rho_init_right_liq", "Right initial value of the density");
+  params.addParam<Real>("rho_init_left", "Left initial value of the density");
+  params.addParam<Real>("rho_init_right", "Right initial value of the density");
   // Initial volume fraction conditions
   params.addRequiredParam<Real>("liq_vf_init_left", "Left initial value of the LIQUID volume fraction");
   params.addRequiredParam<Real>("liq_vf_init_right", "Right initial value of the LIQUID volume fraction");
@@ -27,6 +27,7 @@ InputParameters validParams<SbaDirichletBC>()
   params.addRequiredParam<UserObjectName>("eos", "parameters for eos.");
   // Boolean
   params.addParam<bool>("isLiquid", true, "is phase liquid or not?");
+  params.addParam<bool>("leftBoundary", true, "is left boundary?");  
 
   return params;
 }
@@ -45,25 +46,26 @@ SbaDirichletBC::SbaDirichletBC(const std::string & name, InputParameters paramet
     _t_left(isParamValid("temp_init_left") ? getParam<Real>("temp_init_left") : 0.),
     _t_right(isParamValid("temp_init_right") ? getParam<Real>("temp_init_right") : 0.),
     // Initial density values:
-    _rho_left(isParamValid("rho_init_left_liq") ? getParam<Real>("rho_init_left_liq") : 0.),
-    _rho_right(isParamValid("rho_init_right_liq") ? getParam<Real>("rho_init_right_liq") : 0.),
+    _rho_left(isParamValid("rho_init_left") ? getParam<Real>("rho_init_left") : 0.),
+    _rho_right(isParamValid("rho_init_right") ? getParam<Real>("rho_init_right") : 0.),
     // Initial liquid volume fraction values:
     _liq_vf_left(getParam<Real>("liq_vf_init_left")),
     _liq_vf_right(getParam<Real>("liq_vf_init_right")),
     // Equation of State:
     _eos(getUserObject<EquationOfState>("eos")),
     // Boolean:
-    _isLiquid(getParam<bool>("isLiquid"))
+    _isLiquid(getParam<bool>("isLiquid")),
+    _isLeft(getParam<bool>("leftBoundary"))
 {
   // Determine the initial condition type:
-  if (parameters.isParamValid("rho_init_left") && parameters.isParamValid("rho_init_right"))
+  if (parameters.isParamValid("rho_init_left") && parameters.isParamValid("pressure_init_right"))
     _ics_type = 0;
-  else if (parameters.isParamValid("temp_init_left") && parameters.isParamValid("temp_init_right"))
+  else if (parameters.isParamValid("temp_init_left") && parameters.isParamValid("pressure_init_right"))
     _ics_type = 1;
   else if (parameters.isParamValid("rho_init_left") && parameters.isParamValid("temp_init_left"))
     _ics_type = 2;
   else
-    mooseError("The input values provided in the input files are incomplete.");
+    mooseError("The input values provided in the input file '"<<_name<<"' are incomplete.");
 
   // Boolean for area function
   _isArea = parameters.isParamValid("area") ? true : false;
@@ -76,7 +78,7 @@ SbaDirichletBC::computeQpResidual()
   Real vf, rho, rhou, rhoE;
   if (_ics_type==0)
   {
-    if (_current_boundary_id==0) // left
+    if (_isLeft) // left
     {
       vf = _isLiquid ? _liq_vf_left : 1.-_liq_vf_left;      
       rho = _rho_left;
@@ -93,7 +95,7 @@ SbaDirichletBC::computeQpResidual()
   }
   else if (_ics_type==1)
   {
-    if (_current_boundary_id==0) // left
+    if (_isLeft) // left
     {
       vf = _isLiquid ? _liq_vf_left : 1.-_liq_vf_left;
       rho = _eos.rho_from_p_T(_p_left, _t_left);
@@ -110,7 +112,7 @@ SbaDirichletBC::computeQpResidual()
   }
   else // _ics_type==2
   {
-    if (_current_boundary_id==0) // left
+    if (_isLeft) // left
     {
       vf = _isLiquid ? _liq_vf_left : 1.-_liq_vf_left;
       rho = _rho_left;

@@ -33,6 +33,7 @@ InputParameters validParams<SbaMomentum>()
   params.addRequiredCoupledVar("liquid_volume_fraction", "liquid volume fraction");
   // Parameters:
   params.addParam<bool>("isLiquid", true, "boolean to determine if liquid phase or not");
+  params.addParam<bool>("interfacial_variables_on", false, "boolean for pressure relaxation");
   params.addParam<RealVectorValue>("gravity", (0., 0., 0.), "gravity vector");
   // Equation of states:
   params.addRequiredParam<UserObjectName>("eos_k", "Equation of state for phase k");
@@ -57,6 +58,7 @@ SbaMomentum::SbaMomentum(const std::string & name,
     _grad_liquid_vf(coupledGradient("liquid_volume_fraction")),
     // Parameters:
     _isLiquid(getParam<bool>("isLiquid")),
+    _interfacialOn(getParam<bool>("interfacial_variables_on")),
     _gravity(getParam<RealVectorValue>("gravity")),
     // Equation of states:
     _eos_k(getUserObject<EquationOfState>("eos_k")),
@@ -65,8 +67,7 @@ SbaMomentum::SbaMomentum(const std::string & name,
     // Relaxation coefficients
     _vel_rel(getMaterialProperty<Real>("velocity_relaxation"))
 {
-  if (_mesh.dimension() != 1)
-    mooseError("The function "<<this->name()<<" can only be used with a 1-D mesh");
+  mooseAssert(_mesh.dimension() != 1, "The function "<<this->name()<<" can only be used with a 1-D mesh");
 }
 
 Real SbaMomentum::computeQpResidual()
@@ -83,15 +84,16 @@ Real SbaMomentum::computeQpResidual()
   // Compute densities:
   Real rho_k = _alrhoA_k[_qp] / (alpha_k*_area[_qp]);
 
-  // Compute pressure for phase k:
+  // Compute pressure of phase k:
   Real rhoE_k = _alrhoEA_k[_qp] / (alpha_k*_area[_qp]);  
-  Real pressure_k = _eos_k.pressure(rho_k, vel_k, rhoE_k);
+  Real pressure_k = _eos_k.pressure(rho_k, rho_k*vel_k, rhoE_k);
 
   // Compute convective term:
-  Real conv_k = _alrhouA_x_k[_qp]*vel_k+alpha_k*vel_k*pressure_k;
+  Real conv_k = _alrhouA_x_k[_qp]*vel_k+alpha_k*pressure_k*_area[_qp];
 
   // Compute volume fraction and area gradient terms:
-  Real grad_term = _area[_qp]*_PI[_qp]*grad_alpha_k;
+  Real grad_term = _interfacialOn ? _PI[_qp] : pressure_k;
+  grad_term *= _area[_qp]*grad_alpha_k;
   grad_term += pressure_k*alpha_k*_grad_area[_qp](0);
 
   // Velocity relaxation term:

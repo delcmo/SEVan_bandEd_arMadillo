@@ -57,16 +57,17 @@ private:
 
   // Parameters
   bool _isLiquid;
+  bool _interfacialOn;
   RealVectorValue _gravity;
 
   // Equation of state:
   const EquationOfState & _eos_k;
     
   // Interfacial variables
-  MaterialProperty<Real> & _PI;
+  const MaterialProperty<Real> & _PI;
 
   // Relaxation parameters.
-  MaterialProperty<Real> & _vel_rel;
+  const MaterialProperty<Real> & _vel_rel;
 };
 
 #endif // SBAMOMENTUM_H

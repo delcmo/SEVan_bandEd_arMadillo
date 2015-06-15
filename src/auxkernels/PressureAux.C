@@ -66,5 +66,5 @@ PressureAux::computeValue()
   Real rhoE = _alrhoEA[_qp]/alA;
 
   // Return pressure value
-  return _eos.pressure(rho, vel, rhoE);
+  return _eos.pressure(rho, rho*vel, rhoE);
 }

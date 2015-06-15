@@ -1,0 +1,49 @@
+[Tests]
+  [./independent-phase-shock-tube-different-vf-igeos-fo]
+    type = 'Exodiff'
+    input = 'independent-phase-shock-tube-different-vf-igeos-fo.i'
+    exodiff = 'independent-phase-shock-tube-different-vf-igeos-fo_out.e'
+  [../]
+
+  [./independent-phase-shock-tube-sgeos-fo]
+    type = 'Exodiff'
+    input = 'independent-phase-shock-tube-sgeos-fo.i'
+    exodiff = 'independent-phase-shock-tube-sgeos-fo_out.e'
+  [../]
+
+  [./infinite-relaxation-idgeos-fo]
+    type = 'Exodiff'
+    input = 'infinite-relaxation-idgeos-fo.i'
+    exodiff = 'infinite-relaxation-idgeos-fo_out.e'
+  [../]
+
+  [./nozzle-1d-two-indpdt-fluids-fo]
+    type = 'Exodiff'
+    input = 'nozzle-1d-two-indpdt-fluids-fo.i'
+    exodiff = 'nozzle-1d-two-indpdt-fluids-fo_out.e'
+  [../]
+
+  [./nozzle-two-indpdt-fluids-uniform-pressure]
+    type = 'Exodiff'
+    input = 'nozzle-two-indpdt-fluids-uniform-pressure.i'
+    exodiff = 'nozzle-two-indpdt-fluids-uniform-pressure_out.e'
+  [../]
+
+  [./volume-fraction-ic-step-fluids-at-rest-fo]
+    type = 'Exodiff'
+    input = 'volume-fraction-ic-step-fluids-at-rest-fo.i'
+    exodiff = 'volume-fraction-ic-step-fluids-at-rest-fo_out.e'
+  [../]
+
+  [./volume-fraction-shock-tube-fo]
+    type = 'Exodiff'
+    input = 'volume-fraction-shock-tube-fo.i'
+    exodiff = 'volume-fraction-shock-tube-fo_out.e'
+  [../]
+
+  [./water-air-shock-tube-sgeos-fo]
+    type = 'Exodiff'
+    input = 'water-air-shock-tube-sgeos-fo.i'
+    exodiff = 'water-air-shock-tube-sgeos-fo_out.e'
+  [../]
+[]

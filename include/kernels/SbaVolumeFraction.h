@@ -63,10 +63,10 @@ private:
   const EquationOfState & _eos_j;
 
   // Interfacial variables
-  MaterialProperty<Real> & _velI;
+  const MaterialProperty<Real> & _velI;
 
   // Relaxation parameters.
-  MaterialProperty<Real> & _P_rel;
+  const MaterialProperty<Real> & _P_rel;
 };
 
 #endif // SBAVOLUMEFRACTION_H

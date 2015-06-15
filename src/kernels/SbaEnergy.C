@@ -34,6 +34,7 @@ InputParameters validParams<SbaEnergy>()
   params.addRequiredCoupledVar("liquid_volume_fraction", "liquid volume fraction");
   // Parameters:
   params.addParam<bool>("isLiquid", true, "boolean to determine if liquid phase or not");
+  params.addParam<bool>("interfacial_variables_on", false, "boolean for pressure relaxation");  
   params.addParam<RealVectorValue>("gravity", (0., 0., 0.), "gravity vector");
   // Equation of states:
   params.addRequiredParam<UserObjectName>("eos_k", "Equation of state for phase k");
@@ -72,8 +73,7 @@ SbaEnergy::SbaEnergy(const std::string & name,
     _P_rel(getMaterialProperty<Real>("pressure_relaxation")),
     _vel_rel(getMaterialProperty<Real>("velocity_relaxation"))
 {
-  if (_mesh.dimension() != 1)
-    mooseError("The function"<<this->name()<<" can only be used with a 1-D mesh");
+  mooseAssert(_mesh.dimension() != 1, "The function "<<this->name()<<" can only be used with a 1-D mesh");
 }
 
 Real SbaEnergy::computeQpResidual()
@@ -96,14 +96,15 @@ Real SbaEnergy::computeQpResidual()
   Real rhoE_j = _alrhoEA_j[_qp] / (alpha_j*_area[_qp]);
 
   // Compute pressures:
-  Real pressure_k = _eos_k.pressure(rho_k, vel_k, rhoE_k);
-  Real pressure_j = _eos_j.pressure(rho_j, vel_j, rhoE_j);
+  Real pressure_k = _eos_k.pressure(rho_k, rho_k*vel_k, rhoE_k);
+  Real pressure_j = _eos_j.pressure(rho_j, rho_j*vel_j, rhoE_j);
 
   // Compute convective term:
   Real conv_k = alpha_k*_area[_qp]*vel_k*(rhoE_k+pressure_k);
 
   // Compute volume fraction and area gradient terms:
-  Real grad_term = _area[_qp]*_PI[_qp]*_velI[_qp]*grad_alpha_k;
+  Real grad_term = _PI[_qp]*_velI[_qp];
+  grad_term *= _area[_qp]*grad_alpha_k;
 
   // Velocity relaxation term:
   Real vel_rel_term = _area[_qp]*_velI_bar[_qp]*_vel_rel[_qp]*(vel_j - vel_k);

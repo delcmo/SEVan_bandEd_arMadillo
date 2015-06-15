@@ -16,12 +16,15 @@
 #include "PressureAux.h"
 #include "VelocityAux.h"
 #include "VolumeFractionAux.h"
+#include "EntropyVolumeFractionAux.h"
 
 // initial conditions
 #include "SbaICs.h"
 
 // boundary conditions
 #include "SbaDirichletBC.h"
+#include "SbaOutletStaticPressureBC.h"
+#include "SbaStagnationPandTBC.h"
 
 // materials
 #include "ComputeViscosityCoefficient.h"
@@ -30,6 +33,13 @@
 // equation of state
 #include "EquationOfState.h"
 #include "StiffenedGasEquationOfState.h"
+
+// include userobjects
+#include "JumpGradientInterface.h"
+
+// postprocessors
+#include "TimeStepCFL.h"
+#include "InfiniteNormFromAverageValue.h"
 
 template<>
 InputParameters validParams<SevanBandedArmadilloApp>()
@@ -82,12 +92,15 @@ SevanBandedArmadilloApp::registerObjects(Factory & factory)
   registerAux(PressureAux);
   registerAux(VelocityAux);
   registerAux(VolumeFractionAux);
+  registerAux(EntropyVolumeFractionAux);
 
   // initial conditions
   registerInitialCondition(SbaICs);
 
   // boundary conditions
   registerBoundaryCondition(SbaDirichletBC);
+  registerBoundaryCondition(SbaOutletStaticPressureBC);
+  registerBoundaryCondition(SbaStagnationPandTBC);
 
   // materials
   registerMaterial(ComputeViscosityCoefficient);
@@ -96,6 +109,13 @@ SevanBandedArmadilloApp::registerObjects(Factory & factory)
   // equation of state
   registerUserObject(EquationOfState);
   registerUserObject(StiffenedGasEquationOfState);
+
+  // userobjects
+  registerUserObject(JumpGradientInterface);
+
+  // postprocessors
+  registerPostprocessor(TimeStepCFL);
+  registerPostprocessor(InfiniteNormFromAverageValue);
 }
 
 void

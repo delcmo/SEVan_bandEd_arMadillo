@@ -64,14 +64,14 @@ private:
   const EquationOfState & _eos_j;
     
   // Interfacial variables
-  MaterialProperty<Real> & _PI;
-  MaterialProperty<Real> & _PI_bar;
-  MaterialProperty<Real> & _velI;
-  MaterialProperty<Real> & _velI_bar;
+  const MaterialProperty<Real> & _PI;
+  const MaterialProperty<Real> & _PI_bar;
+  const MaterialProperty<Real> & _velI;
+  const MaterialProperty<Real> & _velI_bar;
 
   // Relaxation parameters.
-  MaterialProperty<Real> & _P_rel;
-  MaterialProperty<Real> & _vel_rel;
+  const MaterialProperty<Real> & _P_rel;
+  const MaterialProperty<Real> & _vel_rel;
 };
 
 #endif // SBAENERGY_H

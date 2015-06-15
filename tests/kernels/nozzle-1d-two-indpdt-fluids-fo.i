@@ -822,7 +822,7 @@
   type = Transient
   scheme = 'bdf2'
   num_steps = 100000
-  end_time = 2.
+  end_time = 32.
   dt = 1.e-2
   dtmin = 1e-9
   l_tol = 1e-8

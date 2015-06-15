@@ -30,8 +30,6 @@ InputParameters validParams<SbaArtificialDissipation>()
   params.addRequiredCoupledVar("internal_energy", "internal energy of the fluid");
   params.addCoupledVar("area", 1., "area of the geometry");
   params.addRequiredCoupledVar("liquid_volume_fraction", "liquid volume fraction");
-  // Equation of State
-  params.addRequiredParam<UserObjectName>("eos", "Equation of state");
   // Boolean
   params.addParam<bool>("isLiquid", true, "boolean to determine if liquid phase or not");
 
@@ -63,10 +61,9 @@ SbaArtificialDissipation::SbaArtificialDissipation(const std::string & name,
     _kappa_liq(getMaterialProperty<Real>("kappa_liq")),
     _kappa_gas(getMaterialProperty<Real>("kappa_gas")),
     _beta_liq(getMaterialProperty<Real>("beta_liq")),
-    _beta_gas(getMaterialProperty<Real>("beta_gas")),
-    // Equation of state:
-    _eos(getUserObject<EquationOfState>("eos"))
+    _beta_gas(getMaterialProperty<Real>("beta_gas"))
 {
+  mooseAssert(_mesh.dimension() != 1, "The function "<<this->name()<<" can only be used with a 1-D mesh");  
 }
 
 Real SbaArtificialDissipation::computeQpResidual()
@@ -80,8 +77,8 @@ Real SbaArtificialDissipation::computeQpResidual()
   Real flux(0.);
 
   // Determine if cell is on boundary or not:
-  if (_current_elem->node(_i) == 0 || _current_elem->node(_i) == _mesh.nNodes()-1) // THIS IS NOT A ROBUST IMPLEMENTATION
-  {
+//  if (_current_elem->node(_i) != 0 || _current_elem->node(_i) != _mesh.nNodes()-1) // THIS IS NOT A ROBUST IMPLEMENTATION
+//  {
     // Phase void fraction:
     Real alpha = _isLiquid ? _alpha_liq[_qp] : (1-_alpha_liq[_qp]);
     Real grad_alpha = _isLiquid ? _grad_alpha_liq[_qp](0) : -_grad_alpha_liq[_qp](0);
@@ -121,9 +118,9 @@ Real SbaArtificialDissipation::computeQpResidual()
       default:
         mooseError("INVALID equation name.");
     }
-  }
-  else
-    flux = 0.;
+//  }
+//  else
+//    flux = 0.;
 
   // Return value
   return _area[_qp]*flux*_grad_test[_i][_qp](0);

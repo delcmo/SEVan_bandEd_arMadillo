@@ -66,8 +66,7 @@ SbaVolumeFraction::SbaVolumeFraction(const std::string & name,
     // Relaxation coefficients
     _P_rel(getMaterialProperty<Real>("pressure_relaxation"))
 {
-  if (_mesh.dimension() != 1)
-    mooseError("The function"<<this->name()<<" can only be used with a 1-D mesh");
+  mooseAssert(_mesh.dimension() != 1, "The function"<<this->name()<<" can only be used with a 1-D mesh");
 }
 
 Real SbaVolumeFraction::computeQpResidual()
@@ -90,17 +89,17 @@ Real SbaVolumeFraction::computeQpResidual()
   Real rhoE_j = _alrhoEA_j[_qp] / (alpha_j*_area[_qp]);
 
   // Compute pressures:
-  Real pressure_k = _eos_k.pressure(rho_k, vel_k, rhoE_k);
-  Real pressure_j = _eos_j.pressure(rho_j, vel_j, rhoE_j);
+  Real pressure_k = _eos_k.pressure(rho_k, rho_k*vel_k, rhoE_k);
+  Real pressure_j = _eos_j.pressure(rho_j, rho_j*vel_j, rhoE_j);
 
   // Compute convective term:
   Real conv_k = _area[_qp]*_velI[_qp]*grad_alpha_k;
 
   // Pressure relaxation term:
-  Real press_rel_term = _area[_qp]*_P_rel[_qp]*(pressure_j-pressure_k);
+  Real press_rel_term = _area[_qp]*_P_rel[_qp]*(pressure_k-pressure_j);
 
   // Return
-  return -conv_k*_test[_i][_qp] - press_rel_term*_test[_i][_qp];
+  return conv_k*_test[_i][_qp] - press_rel_term*_test[_i][_qp];
 }
 
 Real SbaVolumeFraction::computeQpJacobian()

@@ -69,6 +69,7 @@ protected:
   // Booleans:
   bool _isLiquid;
   bool _isArea;
+  bool _isLeft;
 
 };
 

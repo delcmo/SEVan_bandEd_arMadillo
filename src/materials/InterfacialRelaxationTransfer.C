@@ -85,7 +85,7 @@ InterfacialRelaxationTransfer::computeQpProperties()
   // Compute volume fraction of phase j
   Real alpha_j = 1.-_vf_k[_qp];
 
-  // Compute velocity vectors:
+  // Compute velocity values:
   Real vel_k = _alrhouA_x_k[_qp] / _alrhoA_k[_qp];
   Real vel_j = _alrhouA_x_j[_qp] / _alrhoA_j[_qp];
 
@@ -98,12 +98,12 @@ InterfacialRelaxationTransfer::computeQpProperties()
   Real rhoE_j = _alrhoEA_j[_qp] / (alpha_j*_area[_qp]);
 
   // Compute pressures:
-  Real pressure_k = _eos_k.pressure(rho_k, vel_k, rhoE_k);
-  Real pressure_j = _eos_j.pressure(rho_j, vel_j, rhoE_j);
+  Real pressure_k = _eos_k.pressure(rho_k, rho_k*vel_k, rhoE_k);
+  Real pressure_j = _eos_j.pressure(rho_j, rho_j*vel_j, rhoE_j);
 
   // Compute the speed of sound for each phase:
-  Real c2_k = _eos_k.c2(rho_k, vel_k, rho_k);
-  Real c2_j = _eos_j.c2(rho_j, vel_j, rhoE_j);
+  Real c2_k = _eos_k.c2(rho_k, rho_k*vel_k, rhoE_k);
+  Real c2_j = _eos_j.c2(rho_j, rho_j*vel_j, rhoE_j);
 
   // Compute the impedences for each phase:
   Real Z_k = rho_k * std::sqrt(c2_k);
