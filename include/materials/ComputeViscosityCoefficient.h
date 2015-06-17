@@ -74,7 +74,7 @@ private:
   MaterialProperty<Real> & _mu;
   MaterialProperty<Real> & _mu_max;
   MaterialProperty<Real> & _kappa;
-  MaterialProperty<Real> & _kappa_max;
+  MaterialProperty<Real> & _visc_max;
   MaterialProperty<Real> & _beta;
   MaterialProperty<Real> & _beta_max;
 };

@@ -78,7 +78,7 @@ ComputeViscosityCoefficient::ComputeViscosityCoefficient(const std::string & nam
     _mu(_is_liquid ? declareProperty<Real>("mu_liq") : declareProperty<Real>("mu_gas")),
     _mu_max(_is_liquid ? declareProperty<Real>("mu_max_liq") : declareProperty<Real>("mu_max_gas")),
     _kappa(_is_liquid ? declareProperty<Real>("kappa_liq") : declareProperty<Real>("kappa_gas")),
-    _kappa_max(_is_liquid ? declareProperty<Real>("kappa_max_liq") : declareProperty<Real>("kappa_max_gas")),
+    _visc_max(_is_liquid ? declareProperty<Real>("visc_max_liq") : declareProperty<Real>("visc_max_gas")),
     // Declare material property used in volume fraction equation:
     _beta(_is_liquid ? declareProperty<Real>("beta_liq") : declareProperty<Real>("beta_gas")),
     _beta_max(_is_liquid ? declareProperty<Real>("beta_max_liq") : declareProperty<Real>("beta_max_gas"))
@@ -104,11 +104,8 @@ ComputeViscosityCoefficient::computeQpProperties()
   Real c = std::sqrt(_eos.c2_from_rho_p(_rho[_qp], _press[_qp]));
   Real vel = _alrhouA_x_k[_qp]/_alrhoA_k[_qp];
   _mu_max[_qp] = 0.5*h*std::fabs(vel);
-  _kappa_max[_qp] = 0.5*h*(std::fabs(vel) + c);
+  _visc_max[_qp] = 0.5*h*(std::fabs(vel) + c);
   _beta_max[_qp] = 0.5*h*std::fabs(_velI[_qp]);
-  _beta[_qp] = _beta_max[_qp];
-  _kappa[_qp] = _kappa_max[_qp];
-  _mu[_qp] = _kappa_max[_qp];
 
   // Compute the weights for BDF2 temporal integrator
   Real w0(0.), w1(0.), w2(0.);
@@ -120,23 +117,27 @@ ComputeViscosityCoefficient::computeQpProperties()
   }
   else
   {
-    w0 =  1. / _dt;
-    w1 = -1. / _dt;
-    w2 = 0.;
+    w0 =  1. / _dt; w1 = -1. / _dt; w2 = 0.;
   }
+
+  // Compute the Mach number
+  Real Mach = std::min(vel/c, 1.);
 
   // Compute the entropy residual ('res') for the volume fraction equation
   Real res = w0*_ent_vf_liq[_qp]+w1*_ent_vf_liq_old[_qp]+w2*_ent_vf_liq_older[_qp];
   res += _velI[_qp]*_grad_ent_vf_liq[_qp](0);
   res *= _Ce_vf;
 
-  // Compute the jump value:
+  // Compute the jump value
   Real jump = _is_jump_on ? _jump_grad_vf[_qp] : _grad_ent_vf_liq[_qp](0);
   jump *= _Cjump_vf*_velI[_qp];
 
+  // Compute the norm
+  Real norm = getPostprocessorValueByName(_vf_pps_name);
+
   // Compute entropy visc. coeff. for vol. fraction equ.
   Real beta_e = std::max(res, jump);
-  beta_e *= h*h/getPostprocessorValueByName(_vf_pps_name);
+  beta_e *= h*h/norm;
   _beta_max[_qp] = _is_first_order_visc || _t_step==1 ? _beta_max[_qp] : std::min(beta_e, _beta_max[_qp]);
 
   // Compute the entropy residual used in the definition of 'kappa' and 'mu': res=DP/Dt-c*c*DrhoDt
@@ -146,8 +147,26 @@ ComputeViscosityCoefficient::computeQpProperties()
   res += w0*_press[_qp]+w1*_press_old[_qp]+w2*_press_older[_qp];
   res += vel*_grad_press[_qp](0);
 
-  // Compute the Mach number
-//  Real Mach = std::min(vel/c, 1.);
+  // Compute the jump values
+  Real jump_rho = _is_jump_on ? _jump_grad_dens[_qp] : _grad_rho[_qp](0);
+  jump_rho *= c*c;
+  Real jump_press = _is_jump_on ? _jump_grad_press[_qp] : _grad_press[_qp](0);
+  jump = std::max(jump_rho, jump_press);
+
+  // Compute 'mu'
+  norm = Mach*c*c+(1.-Mach)*vel*vel;
+  norm *= _rho[_qp];
+  Real mu_e = std::max(res, jump);
+  mu_e *= h*h/norm;
+  _mu[_qp] = _is_first_order_visc || _t_step==1 ? _visc_max[_qp] : std::min(_visc_max[_qp], mu_e);
+
+  // Compute 'kappa'
+  norm = Mach*c*c+(1.-Mach)*vel*vel;
+  norm *= _rho[_qp];
+  Real kappa_e = std::max(res, jump);
+  kappa_e *= h*h/norm;
+  _kappa[_qp] = _is_first_order_visc || _t_step==1 ? _visc_max[_qp] :  std::min(_visc_max[_qp], kappa_e);
+
 ////    Real Mach2 = _areViscEqual ? Mach*Mach: 1.;
 //    Real Mach2 = Mach*Mach;
 //    Real fct_of_mach = Mach;
