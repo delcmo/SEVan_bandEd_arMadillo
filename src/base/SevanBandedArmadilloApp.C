@@ -36,6 +36,7 @@
 
 // include userobjects
 #include "JumpGradientInterface.h"
+#include "NormalizationParameter.h"
 
 // postprocessors
 #include "TimeStepCFL.h"
@@ -112,6 +113,7 @@ SevanBandedArmadilloApp::registerObjects(Factory & factory)
 
   // userobjects
   registerUserObject(JumpGradientInterface);
+  registerUserObject(NormalizationParameter);
 
   // postprocessors
   registerPostprocessor(TimeStepCFL);

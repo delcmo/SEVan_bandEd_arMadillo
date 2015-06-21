@@ -20,8 +20,8 @@ InputParameters validParams<InterfacialRelaxationTransfer>()
   params.addCoupledVar("area", 1., "cross-section");
   params.addRequiredCoupledVar("volume_fraction_phase_k", "volume fraction of phase k");
   // Maximum specific interfacial area:
-  params.addParam<Real>("Aint_max_press", "Maximum specific interfacial area for pressure relaxation coefficient"); // no need of a default value
-  params.addParam<Real>("Aint_max_vel", "Maximum specific interfacial area for velocity relaxation coefficient"); // no need to a default value
+  params.addParam<Real>("Aint_max_press", 0., "Maximum specific interfacial area for pressure relaxation coefficient"); // no need of a default value
+  params.addParam<Real>("Aint_max_vel", 0., "Maximum specific interfacial area for velocity relaxation coefficient"); // no need to a default value
   // Equation of states:
   params.addRequiredParam<UserObjectName>("eos_k", "Equation of state for phase k");
   params.addRequiredParam<UserObjectName>("eos_j", "Equation of state for phase j");

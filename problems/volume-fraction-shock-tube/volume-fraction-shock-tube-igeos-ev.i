@@ -2,7 +2,7 @@
 [Mesh]
   type = GeneratedMesh
   dim = 1
-  nx = 200
+  nx = 1600
   xmin = 0
   xmax = 1
   block_id = '0'
@@ -12,46 +12,43 @@
 [GlobalParams]
   # initial Conditions
   pressure_init_left = 1.e6
-  pressure_init_right = 1.e5
-  vel_init_left = 0.
-  vel_init_right = 0.
-#  rho_init_left = 1.
-#  rho_init_right = 0.125
-#  temp_init_left = 453.
-#  temp_init_right = 453.
-  liq_vf_init_left = 0.5
-  liq_vf_init_right = 0.5
+  pressure_init_right = 1.e6
+  vel_init_left = 100.
+  vel_init_right = 100.
+  temp_init_left = 453.
+  temp_init_right = 453.
+  liq_vf_init_left = 0.9
+  liq_vf_init_right = 0.1
   membrane_position = 0.5
+  length = 0.
 
   # interfacial variables
   interfacial_definition_name = BERRY
   interfacial_variables_on = true
-  Aint_max_press = 2.e3
-  Aint_max_vel = 2.e3
 
   # stabilization parameters
   is_jump_on = true
-  is_first_order_visc = true
-  Cjump_vf = 1.
+  is_first_order_visc = false
+  Cjump_vf = 5.
   Ce_vf = 1.
 
   # cfl
-  cfl = 1.
+  cfl = 0.1
 []
 
 # USEROBJECTS
 [UserObjects]
-  # eos liquid phase
+  # liquid
   [./eos_liq]
     type = StiffenedGasEquationOfState
     gamma = 3.
     p_inf = 0.
     q = 0.
-    cv = 0.5
+    cv = 2.5
     q_prime = 0.
   [../]
 
-  # eos gas phase
+  # gas phase
   [./eos_gas]
     type = StiffenedGasEquationOfState
     gamma = 1.4
@@ -59,6 +56,15 @@
     q = 0.
     cv = 2.5
   	q_prime = 0.
+  [../]
+
+  # normalization parameters
+  [./norm_param]
+    type = NormalizationParameter
+    M_threshold = 0.
+    a = 0.
+    velocity_pps_name = AverageEntropyVolumeFraction
+    funct_type = Shock_fnct
   [../]
 
   # jump vf liquid
@@ -77,8 +83,6 @@
     scaling = 1e+0
     [./InitialCondition]
       type = SbaICs
-      rho_init_left = 10.
-      rho_init_right = 10.
       eos = eos_liq
     [../]
   [../]
@@ -88,8 +92,6 @@
     scaling = 1e+0
     [./InitialCondition]
       type = SbaICs
-      rho_init_left = 10.
-      rho_init_right = 10.
       eos = eos_liq
     [../]
   [../]
@@ -99,8 +101,6 @@
     scaling = 1e-2
     [./InitialCondition]
       type = SbaICs
-      rho_init_left = 10.
-      rho_init_right = 10.
       eos = eos_liq
     [../]
   [../]
@@ -110,8 +110,6 @@
     scaling = 1e-4
     [./InitialCondition]
       type = SbaICs
-      rho_init_left = 10.
-      rho_init_right = 10.
       eos = eos_liq
     [../]
   [../]
@@ -122,8 +120,6 @@
     scaling = 1e+0
     [./InitialCondition]
       type = SbaICs
-      rho_init_left = 1.
-      rho_init_right = 1.
       eos = eos_gas
       isLiquid = false
     [../]
@@ -131,11 +127,9 @@
 
   [./alrhouA_gas]
     family = LAGRANGE
-    scaling = 1e-4
+    scaling = 1e-2
     [./InitialCondition]
       type = SbaICs
-      rho_init_left = 1.
-      rho_init_right = 1.
       eos = eos_gas
       isLiquid = false
     [../]
@@ -143,11 +137,9 @@
 
   [./alrhoEA_gas]
     family = LAGRANGE
-    scaling = 1e-6
+    scaling = 1e-4
     [./InitialCondition]
       type = SbaICs
-      rho_init_left = 1.
-      rho_init_right = 1.
       eos = eos_gas
       isLiquid = false
     [../]
@@ -399,7 +391,7 @@
     family = LAGRANGE
   [../]
 
-  # elemental variables liquid phase
+  # elemental variables for liquid phase
   [./beta_max_aux_liq]
     family = MONOMIAL
     order = CONSTANT
@@ -410,38 +402,24 @@
     order = CONSTANT
   [../]
 
-  [./visc_max_aux_liq]
-    family = MONOMIAL
-    order = CONSTANT
-  [../]
-
-  [./kappa_aux_liq]
-    family = MONOMIAL
-    order = CONSTANT
-  [../]
-
   [./jump_ent_vf_liq]
     family = MONOMIAL
     order = CONSTANT
   [../]
 
-  # elemental variables gas phase
-  [./beta_aux_gas]
-    family = MONOMIAL
-    order = CONSTANT
-  [../]
-
+  # elemental variables for gas phase
   [./beta_max_aux_gas]
     family = MONOMIAL
     order = CONSTANT
   [../]
 
-  [./visc_max_aux_gas]
+  [./beta_aux_gas]
     family = MONOMIAL
     order = CONSTANT
   [../]
 
-  [./kappa_aux_gas]
+  # elemental interfacial variables
+  [./velI_aux]
     family = MONOMIAL
     order = CONSTANT
   [../]
@@ -496,6 +474,7 @@
   [../]
 
   # elemental variables liquid phase
+
   [./BetaMaxLiquidAK]
     type = MaterialRealAux
     variable = beta_max_aux_liq
@@ -506,18 +485,6 @@
     type = MaterialRealAux
     variable = beta_aux_liq
     property = beta_liq
-  [../]
-  
-  [./KappaMaxLiquidAK]
-    type = MaterialRealAux
-    variable = visc_max_aux_liq
-    property = visc_max_liq
-  [../]
-
-  [./KappaLiquidAK]
-    type = MaterialRealAux
-    variable = kappa_aux_liq
-    property = kappa_liq
   [../]
 
   # Nodal variables gas phase
@@ -569,17 +536,12 @@
     variable = beta_aux_gas
     property = beta_gas
   [../]
-  
-  [./KappaMaxGasAK]
-    type = MaterialRealAux
-    variable = visc_max_aux_gas
-    property = visc_max_gas
-  [../]
 
-  [./KappaGasAK]
+  # elemental interfacial variables
+  [./velI_aux]
     type = MaterialRealAux
-    variable = kappa_aux_gas
-    property = kappa_gas
+    variable = velI_aux
+    property = interfacial_velocity
   [../]
 []
 
@@ -597,6 +559,7 @@
     entropy_vf_liquid = ent_vf_aux_liq
     jump_grad_vf = jump_ent_vf_liq
     eos = eos_liq
+    norm_param = norm_param
     vf_pps_name = InfiniteNormFromAverageValue
   [../]
 
@@ -611,6 +574,7 @@
     entropy_vf_liquid = ent_vf_aux_liq
     jump_grad_vf = jump_ent_vf_liq
     eos = eos_gas
+    norm_param = norm_param
     is_liquid = false
     vf_pps_name = InfiniteNormFromAverageValue
   [../]
@@ -626,6 +590,8 @@
     alrhouA_x_j = alrhouA_gas
     alrhoEA_j = alrhoEA_gas
     volume_fraction_phase_k = vf_aux_liq
+    Aint_max_press = 0.
+    Aint_max_vel = 0.
     eos_k = eos_liq
     eos_j = eos_gas
   [../]
@@ -646,7 +612,7 @@
     eos_j = eos_gas
   [../]
 
-  [./AverageVolumeFraction]
+  [./AverageEntropyVolumeFraction]
     type = ElementAverageValue
     variable = ent_vf_aux_liq
   [../]
@@ -654,7 +620,7 @@
   [./InfiniteNormFromAverageValue]
     type = InfiniteNormFromAverageValue
     variable = ent_vf_aux_liq
-    name_pps_average = AverageVolumeFraction
+    name_pps_average = AverageEntropyVolumeFraction
   [../]
 []
 
@@ -664,8 +630,6 @@
   [./VoidFractionLeftLiq]
     type = SbaDirichletBC
     variable = alA_liq
-    rho_init_left = 10.
-    rho_init_right = 10.
     eos = eos_liq
     boundary = 'left'
   [../]
@@ -673,8 +637,6 @@
   [./MassLiquidLeft]
     type = SbaDirichletBC
     variable = alrhoA_liq
-    rho_init_left = 10.
-    rho_init_right = 10.
     eos = eos_liq
     boundary = 'left'
   [../]
@@ -682,8 +644,6 @@
   [./MassLiquidRight]
     type = SbaDirichletBC
     variable = alrhoA_liq
-    rho_init_left = 10.
-    rho_init_right = 10.
     eos = eos_liq
     boundary = 'right'
     leftBoundary = false
@@ -692,8 +652,6 @@
   [./MomentumLiquidLeft]
     type = SbaDirichletBC
     variable = alrhouA_liq
-    rho_init_left = 10.
-    rho_init_right = 10.
     eos = eos_liq
     boundary = 'left'
   [../]
@@ -701,8 +659,6 @@
   [./MomentumLiquidRight]
     type = SbaDirichletBC
     variable = alrhouA_liq
-    rho_init_left = 10.
-    rho_init_right = 10.
     eos = eos_liq
     boundary = 'right'
     leftBoundary = false
@@ -711,8 +667,6 @@
   [./EnergyLiquidLeft]
     type = SbaDirichletBC
     variable = alrhoEA_liq
-    rho_init_left = 10.
-    rho_init_right = 10.
     eos = eos_liq
     boundary = 'left'
   [../]
@@ -720,8 +674,6 @@
   [./EnergyLiquidRight]
     type = SbaDirichletBC
     variable = alrhoEA_liq
-    rho_init_left = 10.
-    rho_init_right = 10.
     eos = eos_liq
     boundary = 'right'
     leftBoundary = false
@@ -731,8 +683,6 @@
   [./MassGasLeft]
     type = SbaDirichletBC
     variable = alrhoA_gas
-    rho_init_left = 1.
-    rho_init_right = 1.
     eos = eos_gas
     isLiquid = false
     boundary = 'left'
@@ -741,8 +691,6 @@
   [./MassGasRight]
     type = SbaDirichletBC
     variable = alrhoA_gas
-    rho_init_left = 1.
-    rho_init_right = 1.
     eos = eos_gas
     isLiquid = false
     boundary = 'right'
@@ -752,8 +700,6 @@
   [./MomentumGasLeft]
     type = SbaDirichletBC
     variable = alrhouA_gas
-    rho_init_left = 1.
-    rho_init_right = 1.
     eos = eos_gas
     isLiquid = false
     boundary = 'left'
@@ -762,8 +708,6 @@
   [./MomentumGasRight]
     type = SbaDirichletBC
     variable = alrhouA_gas
-    rho_init_left = 1.
-    rho_init_right = 1.
     eos = eos_gas
     isLiquid = false
     boundary = 'right'
@@ -773,8 +717,6 @@
   [./EnergyGasLeft]
     type = SbaDirichletBC
     variable = alrhoEA_gas
-    rho_init_left = 1.
-    rho_init_right = 1.
     eos = eos_gas
     isLiquid = false
     boundary = 'left'
@@ -783,8 +725,6 @@
   [./EnergyGasRight]
     type = SbaDirichletBC
     variable = alrhoEA_gas
-    rho_init_left = 1.
-    rho_init_right = 1.
     eos = eos_gas
     isLiquid = false
     boundary = 'right'
@@ -800,7 +740,7 @@
     solve_type = 'PJFNK'
     petsc_options_iname = '-mat_fd_coloring_err  -mat_fd_type  -mat_mffd_type'
     petsc_options_value = '1.e-10       ds             ds'
-#    line_search = 'default' # does not seem to work well with line_search on
+#    line_search = 'default'
   [../]
 []
 
@@ -808,13 +748,12 @@
 [Executioner]
   type = Transient
   scheme = 'bdf2'
-  num_steps = 100
-  end_time = 473.e-6
-  dt = 1.e-2
+  num_steps = 1000000
+  end_time = 2.5e-3
   dtmin = 1e-9
   l_tol = 1e-8
-  nl_rel_tol = 1e-8
-  nl_abs_tol = 1e-5
+  nl_rel_tol = 1e-12
+  nl_abs_tol = 1e-10
   l_max_its = 50
   nl_max_its = 10
 
@@ -832,9 +771,10 @@
 
 # OUTPUT
 [Outputs]
+  file_base = volume-fraction-shock-tube-igeos-ev-1600-out
   output_initial = true
   output_final = true
-  interval = 1
+  interval = 10
   console = true
   exodus = true
 []

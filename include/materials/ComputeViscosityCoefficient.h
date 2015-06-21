@@ -4,6 +4,7 @@
 #include "Material.h"
 #include "MaterialProperty.h"
 #include "EquationOfState.h"
+#include "NormalizationParameter.h"
 
 //Forward Declarations
 class ComputeViscosityCoefficient;
@@ -24,8 +25,10 @@ protected:
 private:    
   // Boolean
   bool _is_liquid;
-  bool _is_jump_on;
-  bool _is_first_order_visc;
+  bool _use_jump;
+  bool _use_first_order_visc;
+  bool _use_llf_scheme;
+  bool _is_norm_param;
 
   // Conservative variables
   VariableValue & _alrhoA_k;
@@ -66,6 +69,9 @@ private:
 
   // UserObject: equation of state
   const EquationOfState & _eos;
+
+  // UserObject: normalization parameter
+  const NormalizationParameter * _norm;
 
   // Postprocessors
   std::string _vf_pps_name;

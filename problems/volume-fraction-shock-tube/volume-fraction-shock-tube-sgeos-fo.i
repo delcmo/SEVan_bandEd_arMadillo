@@ -17,13 +17,19 @@
   vel_init_right = 10.
   temp_init_left = 453.
   temp_init_right = 453.
-  liq_vf_init_left = 0.6
-  liq_vf_init_right = 0.5
+  liq_vf_init_left = 0.9
+  liq_vf_init_right = 0.1
   membrane_position = 0.5
 
   # interfacial variables
   interfacial_definition_name = BERRY
   interfacial_variables_on = true
+
+  # stabilization parameters
+  is_jump_on = true
+  is_first_order_visc = true
+  Cjump_vf = 1.
+  Ce_vf = 1.
 
   # cfl
   cfl = 1.
@@ -249,12 +255,12 @@
     alrhouA_x_k = alrhouA_gas
   [../]
 
-  [./MassGasDissipation]
-    type = SbaArtificialDissipation
-    variable = alrhoA_gas
-    equation_name = CONTINUITY
+ [./MassGasDissipation]
+   type = SbaArtificialDissipation
+   variable = alrhoA_gas
+   equation_name = CONTINUITY
     density = density_aux_gas
-    pressure = pressure_aux_gas
+   pressure = pressure_aux_gas
     velocity_x =   velocity_x_aux_gas
     internal_energy = internal_energy_aux_gas
     liquid_volume_fraction = vf_aux_liq
@@ -284,7 +290,7 @@
     variable = alrhouA_gas
     equation_name = XMOMENTUM
     density = density_aux_gas
-    pressure = pressure_aux_gas
+   pressure = pressure_aux_gas
     velocity_x =   velocity_x_aux_gas
     internal_energy = internal_energy_aux_gas
     liquid_volume_fraction = vf_aux_liq
@@ -347,6 +353,10 @@
     family = LAGRANGE
   [../]
 
+  [./ent_vf_aux_liq]
+    family = LAGRANGE
+  [../]
+
   # nodal variables gas phase
   [./velocity_x_aux_gas]
     family = LAGRANGE
@@ -371,17 +381,6 @@
   [../]
 
   [./beta_aux_liq]
-    family = MONOMIAL
-    order = CONSTANT
-  [../]
-
-  # elemental variables for gas phase
-  [./beta_max_aux_gas]
-    family = MONOMIAL
-    order = CONSTANT
-  [../]
-
-  [./beta_aux_gas]
     family = MONOMIAL
     order = CONSTANT
   [../]
@@ -435,13 +434,19 @@
     eos = eos_liq
   [../]
 
+  [./EntropyVFLiquidAK]
+    type = EntropyVolumeFractionAux
+    variable = ent_vf_aux_liq
+    volume_fraction_liquid = vf_aux_liq
+  [../]
+
+  # elemental variables liquid phase
   [./BetaMaxLiquidAK]
     type = MaterialRealAux
     variable = beta_max_aux_liq
     property = beta_max_liq
   [../]
 
-  # elemental variables liquid phase
   [./BetaLiquidAK]
     type = MaterialRealAux
     variable = beta_aux_liq
@@ -485,19 +490,6 @@
     isLiquid = false
   [../]
 
-  # elemental variables gas phase
-  [./BetaMaxGasAK]
-    type = MaterialRealAux
-    variable = beta_max_aux_gas
-    property = beta_max_gas
-  [../]
-
-  [./BetaGasAK]
-    type = MaterialRealAux
-    variable = beta_aux_gas
-    property = beta_gas
-  [../]
-
   # elemental interfacial variables
   [./velI_aux]
     type = MaterialRealAux
@@ -517,8 +509,9 @@
     alrhouA_x_k = alrhouA_liq
     pressure = pressure_aux_liq
     density = density_aux_liq
-    volume_fraction_liquid = vf_aux_liq
+    entropy_vf_liquid = vf_aux_liq
     eos = eos_liq
+    vf_pps_name = InfiniteNormFromAverageValue
   [../]
 
   # materials for gas phase
@@ -529,9 +522,10 @@
     alrhouA_x_k = alrhouA_gas
     pressure = pressure_aux_gas
     density = density_aux_gas
-    volume_fraction_liquid = vf_aux_liq
+    entropy_vf_liquid = vf_aux_liq
     eos = eos_gas
-    isLiquid = false
+    is_liquid = false
+    vf_pps_name = InfiniteNormFromAverageValue
   [../]
 
   # materials for interfacial area
@@ -565,6 +559,17 @@
     alrhoEA_j = alrhoEA_gas
     eos_k = eos_liq
     eos_j = eos_gas
+  [../]
+
+  [./AverageVolumeFraction]
+    type = ElementAverageValue
+    variable = ent_vf_aux_liq
+  [../]
+
+  [./InfiniteNormFromAverageValue]
+    type = InfiniteNormFromAverageValue
+    variable = ent_vf_aux_liq
+    name_pps_average = AverageVolumeFraction
   [../]
 []
 
@@ -684,7 +689,7 @@
     solve_type = 'PJFNK'
     petsc_options_iname = '-mat_fd_coloring_err  -mat_fd_type  -mat_mffd_type'
     petsc_options_value = '1.e-10       ds             ds'
-    line_search = 'default'
+#    line_search = 'default'
   [../]
 []
 

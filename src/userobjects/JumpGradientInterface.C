@@ -71,8 +71,8 @@ JumpGradientInterface::execute()
     dof_nb_neighbor = _neighbor_elem->dof_number(_aux.number(), _fe_problem.getVariable(_tid, _jump_name).number(), 0);
 
     // Set the value:
-    sln.add(dof_nb, _value*0.5);
-    sln.add(dof_nb_neighbor, _value*0.5);
+    sln.add(dof_nb, std::fabs(_value)*0.5);
+    sln.add(dof_nb_neighbor, std::fabs(_value)*0.5);
   }
   else
     mooseError("In '"<<name()<<"', cannot compute the jump of the gradient since the variable is not a nodal variable.");

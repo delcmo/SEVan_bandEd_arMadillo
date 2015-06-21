@@ -56,23 +56,15 @@ SbaArtificialDissipation::SbaArtificialDissipation(const std::string & name,
     _alpha_liq(coupledValue("liquid_volume_fraction")),
     _grad_alpha_liq(coupledGradient("liquid_volume_fraction")),
     // Get material property: viscosity coefficient.
-    _mu_liq(getMaterialProperty<Real>("mu_liq")),
-    _mu_gas(getMaterialProperty<Real>("mu_gas")),
-    _kappa_liq(getMaterialProperty<Real>("kappa_liq")),
-    _kappa_gas(getMaterialProperty<Real>("kappa_gas")),
-    _beta_liq(getMaterialProperty<Real>("beta_liq")),
-    _beta_gas(getMaterialProperty<Real>("beta_gas"))
+    _mu(_isLiquid ? getMaterialProperty<Real>("mu_liq") : getMaterialProperty<Real>("mu_gas")),
+    _kappa(_isLiquid ? getMaterialProperty<Real>("kappa_liq") : getMaterialProperty<Real>("kappa_gas")),
+    _beta(_isLiquid ? getMaterialProperty<Real>("beta_liq") : getMaterialProperty<Real>("beta_gas"))
 {
-  mooseAssert(_mesh.dimension() != 1, "The function "<<this->name()<<" can only be used with a 1-D mesh");  
+  mooseAssert(_mesh.dimension() != 1, "The function "<<this->name()<<" can only be used with a 1-D mesh");
 }
 
 Real SbaArtificialDissipation::computeQpResidual()
-{    
-  // Phasic viscosity coefficients
-  Real mu = _isLiquid ? _mu_liq[_qp] : _mu_gas[_qp];
-  Real kappa = _isLiquid ? _kappa_liq[_qp] : _kappa_gas[_qp];
-  Real beta = _isLiquid ? _beta_liq[_qp] : _beta_gas[_qp];
-
+{
   // Initialize the artificial dissipative flux
   Real flux(0.);
 
@@ -85,20 +77,20 @@ Real SbaArtificialDissipation::computeQpResidual()
 
     // Compute l = beta * grad(alpha):
     Real l_k = grad_alpha;
-    l_k *= beta;
+    l_k *= _beta[_qp];
 
     // Compute f = kappa * grad(rho):
     Real f_k = _grad_rho[_qp](0);
-    f_k *= alpha * kappa;
+    f_k *= alpha * _kappa[_qp];
     f_k += _rho[_qp] * l_k;
 
     // Compute g = mu * grad(vel):
     Real g_k = _grad_vel_x[_qp](0);
-    g_k *= mu * _rho[_qp] * alpha;
+    g_k *= _mu[_qp] * _rho[_qp] * alpha;
 
     // Compute h = kappa * grad(rho*e):
     Real h_k = _grad_rhoe[_qp](0);
-    h_k *= alpha * kappa;
+    h_k *= alpha * _kappa[_qp];
 
     // Compute the artificial dissipative flux:
     switch (_equ_type)
@@ -110,7 +102,7 @@ Real SbaArtificialDissipation::computeQpResidual()
         flux = f_k;
         break;
       case XMOMENTUM:
-        flux = _vel_x[_qp]*f_k + mu*alpha*_rho[_qp]*_grad_vel_x[_qp](0);
+        flux = _vel_x[_qp]*f_k + _mu[_qp]*alpha*_rho[_qp]*_grad_vel_x[_qp](0);
         break;
       case ENERGY:
         flux = h_k + 0.5*f_k*_vel_x[_qp]*_vel_x[_qp] + _vel_x[_qp]*g_k +  _rhoe[_qp]*l_k;

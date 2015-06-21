@@ -68,12 +68,9 @@ private:
   VariableGradient & _grad_alpha_liq;
 
   // Material property: viscosity coefficient.
-  const MaterialProperty<Real> & _mu_liq;
-  const MaterialProperty<Real> & _mu_gas;
-  const MaterialProperty<Real> & _kappa_liq;
-  const MaterialProperty<Real> & _kappa_gas;
-  const MaterialProperty<Real> & _beta_liq;
-  const MaterialProperty<Real> & _beta_gas;
+  const MaterialProperty<Real> & _mu;
+  const MaterialProperty<Real> & _kappa;
+  const MaterialProperty<Real> & _beta;
 };
 
 #endif // SBAARTIFICIALDISSIPATION_H

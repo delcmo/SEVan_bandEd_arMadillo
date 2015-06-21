@@ -8,7 +8,9 @@ InputParameters validParams<ComputeViscosityCoefficient>()
   // Booleans:
   params.addParam<bool>("is_liquid", true, "the phase is liquid or not.");
   params.addParam<bool>("is_jump_on", true, "use jump or gradients.");
-  params.addParam<bool>("is_first_order_visc", true, "use the first-order viscosity coefficients if true.");  
+  params.addParam<bool>("is_first_order_visc", true, "use the first-order viscosity coefficients if true.");
+  params.addParam<bool>("use_llf_scheme", false, "use the the LLF scheme for the definition of the first-order visc. coeff.");
+  params.addParam<bool>("use_norm_param_uo", false, "use the the a userobject to compute the normalization parameter.");
   // Coupled variables
   params.addRequiredCoupledVar("alrhoA_k", " phase k alpha*rho*A");
   params.addRequiredCoupledVar("alrhouA_x_k", "x component of phase k alpha*rho*u*A");
@@ -28,6 +30,8 @@ InputParameters validParams<ComputeViscosityCoefficient>()
   params.addParam<Real>("Cjump_vf", 1., "Coefficient for jump in volume fraction viscosity coefficient");
   // Userobject:
   params.addRequiredParam<UserObjectName>("eos", "Equation of state");
+  // Normalization parameter for viscosity coefficients 'kappa' and 'mu'
+  params.addParam<UserObjectName>("norm_param", "Userobject computing the normalization parameter.");
   // PPS names:
   params.addParam<std::string>("vf_pps_name", "name of the pps for volume fraction viscosity coefficient");
 
@@ -38,16 +42,18 @@ ComputeViscosityCoefficient::ComputeViscosityCoefficient(const std::string & nam
     Material(name, parameters),
     // Boolean for phase:
     _is_liquid(getParam<bool>("is_liquid")),
-    _is_jump_on(getParam<bool>("is_jump_on")),
-    _is_first_order_visc(getParam<bool>("is_first_order_visc")),
+    _use_jump(getParam<bool>("is_jump_on")),
+    _use_first_order_visc(getParam<bool>("is_first_order_visc")),
+    _use_llf_scheme(getParam<bool>("use_llf_scheme")),
+    _is_norm_param(isParamValid("norm_param")),
     // Conservative variables for phase k:
     _alrhoA_k(coupledValue("alrhoA_k")),
     _alrhouA_x_k(coupledValue("alrhouA_x_k")),
     // Liquid void fraction:
-    _ent_vf_liq(_is_liquid ? coupledValue("entropy_vf_liquid") : _zero),
-    _ent_vf_liq_old(_is_liquid ? coupledValueOld("entropy_vf_liquid") : _zero),
-    _ent_vf_liq_older(_is_liquid ? coupledValueOlder("entropy_vf_liquid") : _zero),
-    _grad_ent_vf_liq(_is_liquid ? coupledGradient("entropy_vf_liquid") : _grad_zero),
+    _ent_vf_liq(coupledValue("entropy_vf_liquid")),
+    _ent_vf_liq_old(coupledValueOld("entropy_vf_liquid")),
+    _ent_vf_liq_older(coupledValueOlder("entropy_vf_liquid")),
+    _grad_ent_vf_liq(coupledGradient("entropy_vf_liquid")),
     // Pressure:
     _press(coupledValue("pressure")),
     _press_old(coupledValueOld("pressure")),
@@ -72,8 +78,10 @@ ComputeViscosityCoefficient::ComputeViscosityCoefficient(const std::string & nam
     _Cjump_vf(getParam<Real>("Cjump_vf")),
     // UserObject:
     _eos(getUserObject<EquationOfState>("eos")),
+    // Normalization parameter for viscosity coefficients 'kappa' and 'mu'
+    _norm(_is_norm_param ? &getUserObject<NormalizationParameter>("norm_param") : NULL),
     // PPS name:
-    _vf_pps_name(getParam<std::string>("vf_pps_name")),
+    _vf_pps_name(isParamValid("vf_pps_name") ?  getParam<std::string>("vf_pps_name") : "none"),
     // Declare material properties used in mass, momentum and energy equations:
     _mu(_is_liquid ? declareProperty<Real>("mu_liq") : declareProperty<Real>("mu_gas")),
     _mu_max(_is_liquid ? declareProperty<Real>("mu_max_liq") : declareProperty<Real>("mu_max_gas")),
@@ -83,6 +91,7 @@ ComputeViscosityCoefficient::ComputeViscosityCoefficient(const std::string & nam
     _beta(_is_liquid ? declareProperty<Real>("beta_liq") : declareProperty<Real>("beta_gas")),
     _beta_max(_is_liquid ? declareProperty<Real>("beta_max_liq") : declareProperty<Real>("beta_max_gas"))
 {
+  mooseAssert(!isParamValid("vf_pps_name") && _use_first_order_visc, "in the function '"<<names()<<"' the high-order method is used but the a post-porcessor name for the the entropy of the volume fraction equation is not supplied.")
 }
 
 ComputeViscosityCoefficient::~ComputeViscosityCoefficient()
@@ -103,9 +112,9 @@ ComputeViscosityCoefficient::computeQpProperties()
   // Compute the first-order viscosity coefficients:
   Real c = std::sqrt(_eos.c2_from_rho_p(_rho[_qp], _press[_qp]));
   Real vel = _alrhouA_x_k[_qp]/_alrhoA_k[_qp];
-  _mu_max[_qp] = 0.5*h*std::fabs(vel);
-  _visc_max[_qp] = 0.5*h*(std::fabs(vel) + c);
-  _beta_max[_qp] = 0.5*h*std::fabs(_velI[_qp]);
+  _mu_max[_qp] = _Cmax*h*std::fabs(vel);
+  _visc_max[_qp] = _Cmax*h*(std::fabs(vel) + c);
+  _beta_max[_qp] = _use_llf_scheme ? _visc_max[_qp] : _Cmax*h*std::fabs(_velI[_qp]);
 
   // Compute the weights for BDF2 temporal integrator
   Real w0(0.), w1(0.), w2(0.);
@@ -121,7 +130,7 @@ ComputeViscosityCoefficient::computeQpProperties()
   }
 
   // Compute the Mach number
-  Real Mach = std::min(vel/c, 1.);
+  Real Mach = std::min(std::fabs(vel)/c, 1.);
 
   // Compute the entropy residual ('res') for the volume fraction equation
   Real res = w0*_ent_vf_liq[_qp]+w1*_ent_vf_liq_old[_qp]+w2*_ent_vf_liq_older[_qp];
@@ -129,16 +138,17 @@ ComputeViscosityCoefficient::computeQpProperties()
   res *= _Ce_vf;
 
   // Compute the jump value
-  Real jump = _is_jump_on ? _jump_grad_vf[_qp] : _grad_ent_vf_liq[_qp](0);
+  Real jump = _use_jump ? _jump_grad_vf[_qp] : _grad_ent_vf_liq[_qp](0);
   jump *= _Cjump_vf*_velI[_qp];
 
   // Compute the norm
-  Real norm = getPostprocessorValueByName(_vf_pps_name);
+  Real norm = _use_first_order_visc ? getPostprocessorValueByName(_vf_pps_name) : 1.;
 
   // Compute entropy visc. coeff. for vol. fraction equ.
-  Real beta_e = std::max(res, jump);
+  Real beta_e = std::max(std::fabs(res), jump);
   beta_e *= h*h/norm;
-  _beta_max[_qp] = _is_first_order_visc || _t_step==1 ? _beta_max[_qp] : std::min(beta_e, _beta_max[_qp]);
+  _beta[_qp] = _use_first_order_visc || _t_step==1 ? _beta_max[_qp] : std::min(beta_e, _beta_max[_qp]);
+  mooseAssert(_beta[_qp]<0, "The viscosity coefficient 'kappa' computed in '"names()"' is negative");
 
   // Compute the entropy residual used in the definition of 'kappa' and 'mu': res=DP/Dt-c*c*DrhoDt
   res = -w0*_rho[_qp]-w1*_rho_old[_qp]-w2*_rho_older[_qp];
@@ -146,26 +156,30 @@ ComputeViscosityCoefficient::computeQpProperties()
   res *= c*c;
   res += w0*_press[_qp]+w1*_press_old[_qp]+w2*_press_older[_qp];
   res += vel*_grad_press[_qp](0);
+  res *= _Ce;
 
   // Compute the jump values
-  Real jump_rho = _is_jump_on ? _jump_grad_dens[_qp] : _grad_rho[_qp](0);
+  Real jump_rho = _use_jump ? _jump_grad_dens[_qp] : _grad_rho[_qp](0);
   jump_rho *= c*c;
-  Real jump_press = _is_jump_on ? _jump_grad_press[_qp] : _grad_press[_qp](0);
-  jump = std::max(jump_rho, jump_press);
+  Real jump_press = _use_jump ? _jump_grad_press[_qp] : _grad_press[_qp](0);
 
   // Compute 'mu'
-  norm = Mach*c*c+(1.-Mach)*vel*vel;
+  norm = _is_norm_param ? _norm->compute(c*c, vel) : (1.-Mach)*c*c+Mach*vel*vel;
   norm *= _rho[_qp];
-  Real mu_e = std::max(res, jump);
+  jump = std::max(jump_rho*norm, jump_press);
+  Real mu_e = std::max(std::fabs(res), jump);
   mu_e *= h*h/norm;
-  _mu[_qp] = _is_first_order_visc || _t_step==1 ? _visc_max[_qp] : std::min(_visc_max[_qp], mu_e);
+  _mu[_qp] = _use_first_order_visc || _t_step==1 ? _visc_max[_qp] : std::min(_visc_max[_qp], mu_e);
+  mooseAssert(_mu[_qp]<0, "The viscosity coefficient 'kappa' computed in '"names()"' is negative");
 
   // Compute 'kappa'
-  norm = Mach*c*c+(1.-Mach)*vel*vel;
+  norm = (1.-Mach)*c*c+Mach*vel*vel;
   norm *= _rho[_qp];
-  Real kappa_e = std::max(res, jump);
+  jump = std::max(jump_rho*norm, jump_press);  
+  Real kappa_e = std::max(std::fabs(res), jump);
   kappa_e *= h*h/norm;
-  _kappa[_qp] = _is_first_order_visc || _t_step==1 ? _visc_max[_qp] :  std::min(_visc_max[_qp], kappa_e);
+  _kappa[_qp] = _use_first_order_visc || _t_step==1 ? _visc_max[_qp] :  std::min(_visc_max[_qp], kappa_e);
+  mooseAssert(_kappa[_qp]<0, "The viscosity coefficient 'kappa' computed in '"names()"' is negative");
 
 ////    Real Mach2 = _areViscEqual ? Mach*Mach: 1.;
 //    Real Mach2 = Mach*Mach;
@@ -213,7 +227,7 @@ ComputeViscosityCoefficient::computeQpProperties()
 //            residual = _velI[_qp]*_grad_vf_liq[_qp];
 //            residual += (weight0*_vf_liq[_qp]+weight1*_vf_liq_old[_qp]+weight2*_vf_liq_older[_qp]);
 //            residual *= _Ce;
-//            if (_is_jump_on)
+//            if (_use_jump)
 //                jump = _Calpha*std::fabs(_velI[_qp].size()*_jump_grad_alpha[_qp]);
 //            else
 //                jump = _Calpha*std::fabs(_velI[_qp].size()*_grad_vf_liq[_qp](0));
@@ -243,7 +257,7 @@ ComputeViscosityCoefficient::computeQpProperties()
 //            if (_isShock) // non-isentropic flow.
 //            {
 //                // Compute the jumps for mu_e:
-//                if (_is_jump_on)
+//                if (_use_jump)
 //                    jump = _Cjump*vel.size()*std::max( _jump_grad_press[_qp], Mach2*c*c*_jump_grad_dens[_qp] );
 //                else
 //                    jump = _Cjump*vel.size()*std::max( _grad_press[_qp].size(), Mach2*c*c*_grad_rho[_qp].size() );
@@ -254,7 +268,7 @@ ComputeViscosityCoefficient::computeQpProperties()
 //                mu_e += h*h*_pressure[_qp] * std::fabs(vel * _grad_area[_qp]) / ( _area[_qp] * norm );
 //                                
 //                // Compute the jumps for kappa_e:
-//                if (_is_jump_on)
+//                if (_use_jump)
 //                    jump = _Cjump*vel.size()*std::max( _jump_grad_press[_qp], c*c*_jump_grad_dens[_qp] );
 //                else
 //                    jump = _Cjump*vel.size()*std::max( _grad_press[_qp].size(), c*c*_grad_rho[_qp].size() );
@@ -269,7 +283,7 @@ ComputeViscosityCoefficient::computeQpProperties()
 //            else // with function sigma.
 //            {
 //                // Compute the jumps:
-//                if (_is_jump_on)
+//                if (_use_jump)
 //                    jump = _Cjump*vel.size()*std::max( _jump_grad_press[_qp], c*c*_jump_grad_dens[_qp] );
 //                else
 //                    jump = _Cjump*vel.size()*std::max( _grad_press[_qp].size(), c*c*_grad_rho[_qp].size() );

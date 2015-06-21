@@ -12,7 +12,7 @@
 [GlobalParams]
   # initial Conditions
   pressure_init_left = 1.e6
-  pressure_init_right = 1.e5
+  pressure_init_right = 0.1e6
   vel_init_left = 0.
   vel_init_right = 0.
 #  rho_init_left = 1.
@@ -26,15 +26,12 @@
   # interfacial variables
   interfacial_definition_name = BERRY
   interfacial_variables_on = true
-  Aint_max_press = 2.e3
-  Aint_max_vel = 2.e3
 
   # stabilization parameters
   is_jump_on = true
-  is_first_order_visc = true
-  Cjump_vf = 1.
-  Ce_vf = 1.
-
+  is_first_order_visc = false
+  Cjump = 4.
+  Ce = 1.
   # cfl
   cfl = 1.
 []
@@ -61,11 +58,49 @@
   	q_prime = 0.
   [../]
 
-  # jump vf liquid
-  [./jump_vf_liq]
+# normalization parmeter liquid
+[./norm_param_liq]
+  type = NormalizationParameter
+  M_threshold = 0.
+  a = 0.
+  funct_type = Shock_fnct
+  velocity_pps_name = AverageVelocityLiq
+[../]
+
+  [./norm_param_gas]
+    type = NormalizationParameter
+    M_threshold = 0.
+    a = 0.
+    funct_type = Shock_fnct
+    velocity_pps_name = AverageVelocityGas
+  [../]
+
+# normalization parameter gas
+
+  # jump liquid
+  [./jump_press_liq_uo]
     type = JumpGradientInterface
-    variable = ent_vf_aux_liq
-    jump_name = jump_ent_vf_liq
+    variable = pressure_aux_liq
+    jump_name = jump_press_liq
+  [../]
+
+  [./jump_dens_liq_uo]
+    type = JumpGradientInterface
+    variable = density_aux_liq
+    jump_name = jump_dens_liq
+  [../]
+
+  # jump gas
+  [./jump_press_gas_uo]
+    type = JumpGradientInterface
+    variable = pressure_aux_gas
+    jump_name = jump_press_gas
+  [../]
+
+  [./jump_dens_gas_uo]
+    type = JumpGradientInterface
+    variable = density_aux_gas
+    jump_name = jump_dens_gas
   [../]
 []
 
@@ -131,7 +166,7 @@
 
   [./alrhouA_gas]
     family = LAGRANGE
-    scaling = 1e-4
+    scaling = 1e-2
     [./InitialCondition]
       type = SbaICs
       rho_init_left = 1.
@@ -143,7 +178,7 @@
 
   [./alrhoEA_gas]
     family = LAGRANGE
-    scaling = 1e-6
+    scaling = 1e-4
     [./InitialCondition]
       type = SbaICs
       rho_init_left = 1.
@@ -420,7 +455,12 @@
     order = CONSTANT
   [../]
 
-  [./jump_ent_vf_liq]
+  [./jump_press_liq]
+    family = MONOMIAL
+    order = CONSTANT
+  [../]
+
+  [./jump_dens_liq]
     family = MONOMIAL
     order = CONSTANT
   [../]
@@ -442,6 +482,16 @@
   [../]
 
   [./kappa_aux_gas]
+    family = MONOMIAL
+    order = CONSTANT
+  [../]
+
+  [./jump_press_gas]
+    family = MONOMIAL
+    order = CONSTANT
+  [../]
+
+  [./jump_dens_gas]
     family = MONOMIAL
     order = CONSTANT
   [../]
@@ -595,8 +645,10 @@
     pressure = pressure_aux_liq
     density = density_aux_liq
     entropy_vf_liquid = ent_vf_aux_liq
-    jump_grad_vf = jump_ent_vf_liq
+    jump_grad_press = jump_press_liq
+    jump_grad_rho = jump_dens_liq
     eos = eos_liq
+    norm_param = norm_param_liq
     vf_pps_name = InfiniteNormFromAverageValue
   [../]
 
@@ -609,8 +661,10 @@
     pressure = pressure_aux_gas
     density = density_aux_gas
     entropy_vf_liquid = ent_vf_aux_liq
-    jump_grad_vf = jump_ent_vf_liq
+    jump_grad_press = jump_press_gas
+    jump_grad_rho = jump_dens_gas
     eos = eos_gas
+    norm_param = norm_param_gas
     is_liquid = false
     vf_pps_name = InfiniteNormFromAverageValue
   [../]
@@ -644,6 +698,16 @@
     alrhoEA_j = alrhoEA_gas
     eos_k = eos_liq
     eos_j = eos_gas
+  [../]
+
+  [./AverageVelocityLiq]
+    type = ElementAverageValue
+    variable = velocity_x_aux_liq
+  [../]
+
+  [./AverageVelocityGas]
+    type = ElementAverageValue
+    variable = velocity_x_aux_gas
   [../]
 
   [./AverageVolumeFraction]
